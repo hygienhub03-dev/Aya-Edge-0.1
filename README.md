@@ -1,36 +1,37 @@
+# AYA Edge 0.1 — Architecture Scaffold
 
-# AYA Edge 0.1
+Experimental PyTorch scaffold for a compact, agent-specialised sparse Mixture-of-Experts language model.
 
-An experimental compact, agent-specialised sparse Mixture-of-Experts language model.
+## Status
 
-## Project status
+This is an architecture prototype, **not** a trained 310M-parameter model. It uses an MLA-inspired latent key/value bottleneck and a top-k routed MoE feed-forward layer with a shared expert. It is not a faithful implementation of DeepSeek MLA or MiniCPM5.
 
-**Phase:** Architecture scaffold
+## Initial architecture
 
-AYA Edge 0.1 explores a compact architecture combining:
+- Token embeddings and language-model head
+- Pre-normalised Transformer blocks
+- Latent-compressed key/value attention (prototype)
+- SwiGLU-style routed experts
+- Top-k expert routing and a shared expert
+- Load-balancing auxiliary loss
 
-- MLA-inspired latent attention
-- Fine-grained sparse Mixture-of-Experts (MoE)
-- Top-k expert routing
-- Shared expert layers
-- Instruction following and agentic tool-use capabilities
+## Quick start
 
-## Development approach
+```bash
+python -m pip install -e .
+python scripts/inspect_model.py --config configs/aya_edge_0_1.yaml
+pytest
+```
 
-The project will progress through:
+The default configuration is intentionally small enough for architecture inspection. Adjust dimensions only after validating memory and compute requirements on the target GPU.
 
-1. Architecture design and validation
-2. Pretraining
-3. Mid-training
-4. Supervised fine-tuning (SFT)
-5. Reasoning and agentic alignment
+## Teacher
 
-## Teacher model
+Initial distillation teacher: `openbmb/MiniCPM5-1B`. The teacher is dense; this project does not assume it contains experts that can simply be pruned. Dense-to-MoE conversion and distillation require explicit experiments.
 
-MiniCPM5-1B is the initial teacher model for experimentation and knowledge distillation.
+## Limitations / next steps
 
-## Important
-
-This is an experimental research project. The initial architecture is a prototype and has not yet reached its intended 310M parameter target.
-
-See upcoming architecture documentation for implementation details.
+- Attention omits production-grade RoPE, KV caching, and long-context optimisations.
+- Router dispatch is a simple prototype implementation, not an optimised sparse kernel.
+- No tokenizer, dataset, training loop, checkpointing, or distillation pipeline is included yet.
+- Unit tests are provided but must be run in the target environment.

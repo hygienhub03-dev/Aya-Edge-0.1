@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aya-edge"
+version = "0.1.0"
+description = "Experimental compact sparse MoE language model scaffold"
+requires-python = ">=3.10"
+dependencies = ["torch>=2.1", "PyYAML>=6.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4"]
+
+[tool.setuptools.packages.find]
+include = ["aya_edge*"]
