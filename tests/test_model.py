@@ -23,3 +23,14 @@ def test_invalid_top_k_rejected():
     except ValueError:
         return
     raise AssertionError("Expected invalid top_k to raise ValueError")
+
+def test_embedding_initialization_and_weight_tying():
+    config = tiny_config()
+    model = AyaEdgeForCausalLM(config)
+
+    assert (
+        model.embed.weight.data_ptr()
+        == model.lm_head.weight.data_ptr()
+    )
+
+    assert abs(model.embed.weight.std().item() - 0.02) < 0.002

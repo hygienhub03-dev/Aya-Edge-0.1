@@ -89,24 +89,64 @@ class AyaEdgeForCausalLM(nn.Module):
     def __init__(self, config: AyaEdgeConfig):
         super().__init__()
         self.config = config
-        self.embed = nn.Embedding(config.vocab_size, config.d_model)
-        self.blocks = nn.ModuleList([Block(config) for _ in range(config.n_layers)])
+
+        self.embed = nn.Embedding(
+            config.vocab_size,
+            config.d_model
+        )
+
+        self.blocks = nn.ModuleList([
+            Block(config) for _ in range(config.n_layers)
+        ])
+
         self.norm = nn.LayerNorm(config.d_model)
-        self.lm_head = nn.Linear(config.d_model, config.vocab_size, bias=False)
+
+        self.lm_head = nn.Linear(
+            config.d_model,
+            config.vocab_size,
+            bias=False
+        )
+
+        # Tie input embeddings and output projection
         self.lm_head.weight = self.embed.weight
+
+        # Controlled token embedding initialisation
+        nn.init.normal_(
+            self.embed.weight,
+            mean=0.0,
+            std=0.02
+        )
 
     def forward(self, input_ids, labels=None):
         x = self.embed(input_ids)
+
         aux_losses = []
+
         for block in self.blocks:
             x, aux = block(x)
             aux_losses.append(aux)
+
         logits = self.lm_head(self.norm(x))
-        aux_loss = torch.stack(aux_losses).mean() if aux_losses else logits.new_zeros(())
+
+        aux_loss = (
+            torch.stack(aux_losses).mean()
+            if aux_losses
+            else logits.new_zeros(())
+        )
+
         loss = None
+
         if labels is not None:
-            loss = F.cross_entropy(logits[:, :-1].reshape(-1, logits.size(-1)), labels[:, 1:].reshape(-1))
-        return {"logits": logits, "loss": loss, "aux_loss": aux_loss}
+            loss = F.cross_entropy(
+                logits[:, :-1].reshape(-1, logits.size(-1)),
+                labels[:, 1:].reshape(-1)
+            )
+
+        return {
+            "logits": logits,
+            "loss": loss,
+            "aux_loss": aux_loss
+        }
 
 
 def count_parameters(model):
