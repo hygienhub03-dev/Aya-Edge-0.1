@@ -1,0 +1,42 @@
+{
+  "dataset_name": "AYA Edge Mini Dataset",
+  "dataset_version": "1.0.0",
+  "total_examples": 120,
+  "splits": {
+    "train": 80,
+    "validation": 20,
+    "test": 20
+  },
+  "categories": {
+    "general_language": 60,
+    "agentic": 60
+  },
+  "category_distribution_per_split": {
+    "train": {
+      "general_language": 40,
+      "agentic": 40
+    },
+    "validation": {
+      "general_language": 10,
+      "agentic": 10
+    },
+    "test": {
+      "general_language": 10,
+      "agentic": 10
+    }
+  },
+  "generation_date": "2026-11-06",
+  "simulated_tools": [
+    "web_search(query)",
+    "calculator(expression)",
+    "get_weather(location)",
+    "get_time(timezone)",
+    "calendar_search(date)",
+    "notes_create(title, content)",
+    "notes_search(query)"
+  ],
+  "unique_ids": true,
+  "no_intentional_duplicates": true,
+  "no_split_leakage": true,
+  "description": "Small synthetic dataset for overfitting experiments with AYA Edge 0.1 (85M parameter sparse MoE causal LM). Tests basic language pattern learning and simulated agentic tool-use behaviour. All tool results are simulated."
+}
