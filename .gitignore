@@ -10,3 +10,5 @@ venv/
 checkpoints/
 data/
 outputs/
+.research/
+*.egg-info/
