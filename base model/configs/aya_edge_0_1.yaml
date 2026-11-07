@@ -1,0 +1,23 @@
+model:
+  vocab_size: 32000
+  d_model: 512
+  n_layers: 8
+  n_heads: 8
+  latent_dim: 128
+  ffn_dim: 1024
+  n_experts: 4
+  top_k: 2
+  use_shared_expert: true
+  max_seq_len: 512
+
+training:
+  seed: 42
+  learning_rate: 0.0003
+  weight_decay: 0.1
+  batch_size: 2
+  max_steps: 1000
+  aux_loss_weight: 0.01
+
+teacher:
+  model_id: openbmb/MiniCPM5-1B
+  trust_remote_code: true
