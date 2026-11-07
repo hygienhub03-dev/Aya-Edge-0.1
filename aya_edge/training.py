@@ -10,16 +10,21 @@ import torch
 from .config import AyaEdgeConfig
 
 
-def set_seed(seed: int) -> None:
-    """Seed Python and PyTorch RNGs; enable deterministic CUDA algorithms."""
-    if seed < 0:
+def set_seed(seed: int, *, deterministic: bool = True) -> None:
+    """Seed RNGs and optionally request deterministic PyTorch algorithms.
+
+    Deterministic algorithms can reduce performance and may be unavailable for
+    some kernels. Callers should record this choice in experiment metadata.
+    """
+    if not isinstance(seed, int) or isinstance(seed, bool) or seed < 0:
         raise ValueError("seed must be non-negative")
     random.seed(seed)
     torch.manual_seed(seed)
+    torch.use_deterministic_algorithms(deterministic, warn_only=True)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
+        torch.backends.cudnn.deterministic = deterministic
+        torch.backends.cudnn.benchmark = not deterministic
 
 
 def _rng_state() -> dict[str, Any]:

@@ -27,6 +27,14 @@ class AyaEdgeConfig:
             "n_experts": self.n_experts,
             "max_seq_len": self.max_seq_len,
         }
+        non_integer = [
+            name for name, value in positive.items()
+            if not isinstance(value, int) or isinstance(value, bool)
+        ]
+        if non_integer:
+            raise TypeError(
+                f"Configuration values must be integers: {', '.join(non_integer)}"
+            )
         invalid = [name for name, value in positive.items() if value <= 0]
         if invalid:
             raise ValueError(f"Configuration values must be positive: {', '.join(invalid)}")

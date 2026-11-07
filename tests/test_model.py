@@ -94,25 +94,33 @@ def test_checkpoint_round_trip(tmp_path):
     config = tiny_config()
     model = AyaEdgeForCausalLM(config)
     optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1)
     tokens = torch.randint(0, config.vocab_size, (2, 12))
     result = model(tokens, labels=tokens)
     result["loss"].backward()
     optimizer.step()
+    scheduler.step()
     path = tmp_path / "checkpoint.pt"
     save_checkpoint(
         path,
         model,
         optimizer,
+        scheduler=scheduler,
         step=7,
         tokens_processed=168,
         config=config,
         dataset_version="test-v1",
     )
+    expected_next_random = torch.rand(3)
+    _ = torch.rand(3)
     restored = AyaEdgeForCausalLM(config)
     restored_optimizer = torch.optim.AdamW(restored.parameters(), lr=1e-3)
-    metadata = load_checkpoint(path, restored, restored_optimizer)
+    restored_scheduler = torch.optim.lr_scheduler.StepLR(restored_optimizer, step_size=1)
+    metadata = load_checkpoint(path, restored, restored_optimizer, restored_scheduler)
     assert metadata["step"] == 7
     assert metadata["tokens_processed"] == 168
     assert metadata["dataset_version"] == "test-v1"
+    assert restored_scheduler.last_epoch == scheduler.last_epoch
+    assert torch.equal(torch.rand(3), expected_next_random)
     for left, right in zip(model.parameters(), restored.parameters()):
         assert torch.equal(left, right)
