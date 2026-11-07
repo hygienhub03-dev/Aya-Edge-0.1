@@ -97,6 +97,7 @@ class TopKMoE(nn.Module):
         self.shared = (
             SwiGLU(cfg.d_model, cfg.ffn_dim) if cfg.use_shared_expert else None
         )
+        self.last_routing_stats: dict[str, torch.Tensor] = {}
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         shape = x.shape
@@ -121,6 +122,13 @@ class TopKMoE(nn.Module):
         assignment = F.one_hot(indices, self.n_experts).float().mean(dim=(0, 1))
         importance = probs.mean(dim=0)
         aux_loss = self.n_experts * torch.sum(assignment * importance)
+        safe_probs = probs.clamp_min(1e-9)
+        self.last_routing_stats = {
+            "assignment_fraction": assignment.detach(),
+            "importance_fraction": importance.detach(),
+            "router_entropy": (-(safe_probs * safe_probs.log()).sum(dim=-1).mean()).detach(),
+            "selected_expert_ids": indices.detach(),
+        }
 
         return routed.view(shape), aux_loss
 
@@ -173,6 +181,11 @@ class AyaEdgeForCausalLM(nn.Module):
             if aux_losses
             else logits.new_zeros(())
         )
+        routing_stats = {
+            str(i): block.moe.last_routing_stats
+            for i, block in enumerate(self.blocks)
+            if block.moe.last_routing_stats
+        }
 
         loss = None
         if labels is not None:
@@ -187,6 +200,7 @@ class AyaEdgeForCausalLM(nn.Module):
             "logits": logits,
             "loss": loss,
             "aux_loss": aux_loss,
+            "routing_stats": routing_stats,
         }
 
     @torch.no_grad()
@@ -199,13 +213,16 @@ class AyaEdgeForCausalLM(nn.Module):
         top_k: int | None = None,
     ) -> torch.Tensor:
         """Simple autoregressive generation."""
+        if max_new_tokens < 0:
+            raise ValueError("max_new_tokens must be non-negative")
+        if temperature <= 0:
+            raise ValueError("temperature must be greater than zero")
+        if top_k is not None and top_k <= 0:
+            raise ValueError("top_k must be positive when provided")
         self.eval()
         generated = input_ids
 
         for _ in range(max_new_tokens):
-            if generated.shape[1] >= self.config.max_seq_len:
-                break
-
             # Use only the last context window if needed
             context = generated[:, -self.config.max_seq_len :]
             logits = self(context)["logits"][:, -1, :]  # (B, V)
@@ -230,3 +247,24 @@ class AyaEdgeForCausalLM(nn.Module):
 
 def count_parameters(model: nn.Module) -> int:
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+
+def count_active_parameters(model: AyaEdgeForCausalLM) -> int:
+    """Estimate parameters used for one token under the configured router.
+
+    This is a structural estimate, not a runtime FLOP count. Tied embedding
+    and output weights are counted once; selected routed experts and the shared
+    expert are counted per layer.
+    """
+    cfg = model.config
+    total = model.embed.weight.numel()
+    for name, parameter in model.named_parameters():
+        if name == "embed.weight" or ".moe.experts." in name or ".moe.shared." in name:
+            continue
+        total += parameter.numel()
+    expert_params = sum(p.numel() for p in model.blocks[0].moe.experts[0].parameters())
+    total += cfg.n_layers * cfg.top_k * expert_params
+    if model.blocks[0].moe.shared is not None:
+        shared_params = sum(p.numel() for p in model.blocks[0].moe.shared.parameters())
+        total += cfg.n_layers * shared_params
+    return total
