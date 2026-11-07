@@ -1,4 +1,5 @@
 """AYA Edge 0.1 experimental model scaffold."""
-from .model import AyaEdgeConfig, AyaEdgeForCausalLM
+from .config import AyaEdgeConfig
+from .model import AyaEdgeForCausalLM, count_parameters
 
-__all__ = ["AyaEdgeConfig", "AyaEdgeForCausalLM"]
+__all__ = ["AyaEdgeConfig", "AyaEdgeForCausalLM", "count_parameters"]

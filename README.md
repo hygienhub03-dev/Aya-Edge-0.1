@@ -4,16 +4,17 @@ Experimental PyTorch scaffold for a compact, agent-specialised sparse Mixture-of
 
 ## Status
 
-This is an architecture prototype, **not** a trained 310M-parameter model. It uses an MLA-inspired latent key/value bottleneck and a top-k routed MoE feed-forward layer with a shared expert. It is not a faithful implementation of DeepSeek MLA or MiniCPM5.
+This is an architecture prototype, **not** a trained 310M-parameter model. It uses an MLA-inspired latent key/value bottleneck with rotary positional embeddings (RoPE) and a top-k routed MoE feed-forward layer with a shared expert. It is not a faithful implementation of DeepSeek MLA or MiniCPM5.
 
 ## Initial architecture
 
-- Token embeddings and language-model head
+- Token embeddings and language-model head (weight-tied)
 - Pre-normalised Transformer blocks
-- Latent-compressed key/value attention (prototype)
+- Latent-compressed key/value attention with RoPE
 - SwiGLU-style routed experts
 - Top-k expert routing and a shared expert
 - Load-balancing auxiliary loss
+- Simple `generate()` helper (temperature + top-k)
 
 ## Quick start
 
@@ -31,7 +32,7 @@ Initial distillation teacher: `openbmb/MiniCPM5-1B`. The teacher is dense; this 
 
 ## Limitations / next steps
 
-- Attention omits production-grade RoPE, KV caching, and long-context optimisations.
+- Attention still omits KV caching and long-context optimisations.
 - Router dispatch is a simple prototype implementation, not an optimised sparse kernel.
-- No tokenizer, dataset, training loop, checkpointing, or distillation pipeline is included yet.
+- No full training / distillation pipeline is included yet (see the mini-dataset under `aya_edge_mini_dataset_v1/` for overfitting experiments).
 - Unit tests are provided but must be run in the target environment.
