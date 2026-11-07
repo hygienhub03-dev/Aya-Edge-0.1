@@ -14,6 +14,7 @@ class AyaEdgeConfig:
     n_experts: int = 4
     top_k: int = 2
     use_shared_expert: bool = True
+    router_z_loss_weight: float = 0.0
     max_seq_len: int = 512
 
     def __post_init__(self) -> None:
@@ -48,6 +49,10 @@ class AyaEdgeConfig:
             raise ValueError("top_k must be between 1 and n_experts")
         if not isinstance(self.use_shared_expert, bool):
             raise TypeError("use_shared_expert must be a bool")
+        if not isinstance(self.router_z_loss_weight, (float, int)):
+            raise TypeError("router_z_loss_weight must be numeric")
+        if self.router_z_loss_weight < 0:
+            raise ValueError("router_z_loss_weight must be non-negative")
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

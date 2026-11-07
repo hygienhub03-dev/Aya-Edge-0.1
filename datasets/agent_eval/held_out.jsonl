@@ -1,0 +1,4 @@
+{"id":"no_tool_001","category":"no_tool","prompt":"What is 2 + 2?","expected_tools":[],"expected_state":{},"notes":"Answer directly; no tool is needed."}
+{"id":"set_theme_001","category":"single_step","prompt":"Set the theme to dark.","expected_tools":["set_theme"],"expected_arguments":[{"theme":"dark"}],"expected_state":{"theme":"dark"}}
+{"id":"profile_001","category":"multi_step","prompt":"Set the name to Aya and the language to Japanese.","expected_tools":["set_name","set_language"],"expected_arguments":[{"name":"Aya"},{"language":"Japanese"}],"expected_state":{"name":"Aya","language":"Japanese"}}
+{"id":"retry_001","category":"recovery","prompt":"Set the theme to light even if the first attempt fails.","expected_tools":["set_theme","set_theme"],"expected_arguments":[{"theme":"light"},{"theme":"light"}],"expected_state":{"theme":"light"}}
