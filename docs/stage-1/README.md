@@ -1,5 +1,9 @@
 # AYA Edge — Stage 1: Language-Model Pretraining
 
+## Governing specification
+
+This stage plan is subordinate to the repository-level [AYA Edge Official Model Capability Specification](../../MODEL_SPECIFICATION.md). Any change to objectives, data, training, architecture, or evaluation must preserve the approved agent-first identity or document its reason, expected benefit, and evaluation method.
+
 ## Purpose
 
 Stage 1 establishes the language foundation of AYA Edge.

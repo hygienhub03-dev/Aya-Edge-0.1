@@ -1,5 +1,9 @@
 # AYA Edge — Stage 2: Mid-Training and Context Development
 
+## Governing specification
+
+This stage plan is subordinate to the repository-level [AYA Edge Official Model Capability Specification](../../MODEL_SPECIFICATION.md). Any change to objectives, data, training, architecture, or evaluation must preserve the approved agent-first identity or document its reason, expected benefit, and evaluation method.
+
 ## Purpose
 
 Stage 2 improves AYA Edge's ability to process and retain information across longer input sequences.
