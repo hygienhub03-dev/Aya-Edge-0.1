@@ -8,6 +8,17 @@ AYA Edge 0.2 will use a custom byte-level BPE tokenizer with exactly **32,768 vo
 
 Byte-level BPE preserves arbitrary Unicode and structured text while learning shorter subword units for natural language, code-like syntax, JSON, XML, tool names, and tool results. The BPE implementation is wrapped through the optional `tokenizers` dependency; the repository does not silently fall back to the 268-token adapter when production mode is requested.
 
+## Locked vocabulary layout (final)
+
+```
+32,768 total IDs
+├── 0–15:     16 reserved special tokens          (fixed contract)
+├── 16–271:   256 byte-alphabet fallback tokens   (ByteLevel initial alphabet)
+└── 272–32,767: 32,496 learned BPE entries         (corpus-dependent)
+```
+
+This layout is enforced on every load of a production tokenizer artifact.
+
 ## Fixed special-token contract
 
 IDs 0–15 are reserved before BPE training and must never be learned or reordered:
@@ -31,7 +42,9 @@ IDs 0–15 are reserved before BPE training and must never be learned or reorder
 | 14 | `<|end_of_task|>` | Task completion |
 | 15 | `<|meta_sep|>` | Metadata separator |
 
-IDs 16–32,767 are learned BPE vocabulary entries. The implementation validates every reserved ID on load.
+IDs 16–271 are the fixed 256-byte fallback alphabet supplied by the Hugging Face `ByteLevel` pre-tokenizer. They guarantee that every possible UTF-8 byte sequence can be represented even if the learned merges do not cover it.
+
+IDs 272–32,767 are the learned BPE merge entries produced by training on the approved corpus. The implementation validates the full layout (specials + complete byte-fallback block) on load.
 
 ## Training gate
 
@@ -60,7 +73,7 @@ A released artifact must record:
 - the exact `tokenizers` library version;
 - the normalized corpus-manifest SHA-256;
 - the final `tokenizer.json` SHA-256;
-- the fixed special-token IDs and vocabulary size;
+- the fixed special-token IDs, byte-fallback block, and vocabulary size;
 - BPE training parameters and normalization policy.
 
 No guessed, placeholder, or future checksum belongs in the production manifest. The model embedding, tied output head, token-counting tools, training loop, and inference loader must all validate the same vocabulary size and artifact manifest.
