@@ -6,7 +6,8 @@
 
 - Python 3.12.3 on Ubuntu Linux sandbox.
 - pytest 9.2.0; PyYAML 6.0.3; jsonschema 4.26.0; pandas 3.1.0.
-- `datasets`, `huggingface-hub`, `pyarrow`, and `tokenizers` are not installed in the audit environment; no external payload was acquired. Those are declared as optional `.[data]` dependencies for an approved Kaggle T4 acquisition environment. The tests deliberately avoid installing model/PyTorch dependencies.
+- PyTorch is not installed in the local audit environment, so the existing model test suite cannot collect locally. The GitHub Actions repository-test job installs the CPU PyTorch wheel before running the full suite.
+- `datasets`, `huggingface-hub`, `pyarrow`, and `tokenizers` are not installed in the audit environment; no external payload was acquired. Those are declared as optional `.[data]` dependencies for an approved Kaggle T4 acquisition environment. Data acceptance tests do not require downloading datasets.
 - All experiment payload paths are environment-configurable (`AYA_DATA_ROOT`, `HF_HOME`); raw/cached data are excluded from Git.
 
 ## Commands executed and observed result
@@ -16,7 +17,9 @@
 | `python3 scripts/data/inspect_sources.py --config configs/data/source_registry.yaml` | Passed for the seven unique Hugging Face source repositories; printed immutable current commit hashes. The dated Wikimedia snapshot and pinned BFCL GitHub evaluator were explicitly skipped by the HF resolver. Registry pins were not rewritten. |
 | `python3 scripts/data/verify_licenses.py --config configs/data/source_registry.yaml` | Returned per-source gate status. BFCL V4 passed only as conditional evaluation-only; eight acquisition candidates remained blocked. |
 | `python3 scripts/data/download_datasets.py --config configs/data/acquisition.yaml --stage pilot` | Exit 0; reported no Stage 1 sources approved/enabled and downloaded no payload. |
-| `python3 scripts/data/run_acceptance_tests.py --stage pilot` | **Passed: 28 tests in 0.31 seconds** on the final implementation before commit. |
+| `python3 scripts/data/run_acceptance_tests.py --stage pilot` | **Passed: 30 tests in 0.17 seconds**, including invalid-record accounting and a once-per-file checksum regression. |
+| `python3 scripts/data/check_ci.py --base-ref origin/main` | **Passed**; scanned 67 changed files for YAML, JSON Schema, notebook syntax, disabled acquisition sources, dataset payloads and credential material. |
+| `python3 -m pytest -q` | Local attempt stopped at collection because `torch` is not installed (`ModuleNotFoundError`). The new Actions job installs CPU PyTorch and will run this full repository suite. |
 | `python3 scripts/data/verify_licenses.py --config configs/data/source_registry.yaml --strict` | Exit 2, expected: eight blocked acquisition sources prevent a strict acquisition approval. |
 | `python3 scripts/data/validate_dataset.py --stage pilot` | Exit 1, expected: empty pilot, absent token-count manifest, and absent token-count-aware mixture are hard failures. No empty-corpus pass is claimed. |
 | `python3 scripts/data/generate_report.py --stage pilot` | Executed in an isolated temporary `AYA_DATA_ROOT`; wrote a valid reproducibility summary with zero acquired sources. This is not a data-quality pass. |
@@ -31,7 +34,7 @@ Other executed checks: YAML config parsing; revision pin inspection; tokenizer/m
 - Training records and token mixture: **0 records / 0 tokens**.
 - Stage 1 sources approved and included: **0**.
 - Source identities researched/pinned: eight dataset families/subsets plus BFCL held-out evaluator; nine registry entries.
-- Synthetic fixture tests: 28 passed (code behavior only).
+- Synthetic fixture tests: 30 passed (code behavior only).
 
 The explicit acquisition, checksums, source, and split manifests record this no-download state. The licensed-source report retains blockers rather than treating public visibility or a repository license tag as permission to download/train/redistribute.
 
@@ -54,4 +57,4 @@ The explicit acquisition, checksums, source, and split manifests record this no-
 4. BFCL and the RL evaluation partitions remain excluded; no actual corpus-to-test contamination comparison occurred.
 5. Wikipedia snapshot namespace ambiguity, per-page exceptions, attribution/ShareAlike plan, and XML sunset need review before a dump shard can be processed.
 
-**Final status:** pipeline synthetic acceptance tests pass. External dataset pilot acceptance: **NOT RUN / NOT PASSED**. Training corpus: **NOT APPROVED for Stage 1**. No training started.
+**Final status:** pipeline synthetic acceptance tests pass locally; PR CI has dedicated data/hygiene and repository-test jobs. External dataset pilot acceptance: **NOT RUN / NOT PASSED**. Training corpus: **NOT APPROVED for Stage 1**. No training started.

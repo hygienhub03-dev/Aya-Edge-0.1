@@ -1,0 +1,51 @@
+name: Data and repository validation
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [feature/aya-edge-dataset-acquisition]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  data-acceptance:
+    name: Data acceptance and PR hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository history for PR diff scan
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install data-test dependencies
+        run: python -m pip install --upgrade pytest PyYAML jsonschema
+      - name: Run data acceptance tests
+        run: python scripts/data/run_acceptance_tests.py --stage pilot
+      - name: Fetch base branch for changed-file checks
+        run: git fetch origin main --no-tags --depth=1
+      - name: Validate configs, schemas, notebook syntax, licensing blocks, payloads and credentials
+        run: python scripts/data/check_ci.py --base-ref origin/main
+
+  repository-tests:
+    name: Existing repository tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install test dependencies and CPU PyTorch
+        run: |
+          python -m pip install --upgrade pip pytest PyYAML
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch>=2.1'
+          python -m pip install --no-deps -e .
+      - name: Run repository test suite
+        run: python -m pytest -q

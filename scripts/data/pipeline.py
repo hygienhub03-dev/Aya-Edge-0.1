@@ -569,9 +569,10 @@ def normalize_datasets(stage: str) -> int:
         revision = parse_revision(source)
         norm = source.get("normalizer", {}) or {}
         kind = norm.get("kind", "document")
+        source_file_checksum = sha256_file(raw_path)
         for row_number, raw in enumerate(read_jsonl(raw_path)):
             orig = raw.get(norm.get("id_field", "id"), raw.get("id", row_number))
-            provenance = {"original_record_id": str(orig), "source_split": source.get("split", "train"), "synthetic": bool(source.get("synthetic_or_human") == "synthetic"), "transformation_version": TRANSFORM_VERSION, "source_file": str(raw_path.relative_to(DATA_ROOT)), "source_checksum": sha256_file(raw_path)}
+            provenance = {"original_record_id": str(orig), "source_split": source.get("split", "train"), "synthetic": bool(source.get("synthetic_or_human") == "synthetic"), "transformation_version": TRANSFORM_VERSION, "source_file": str(raw_path.relative_to(DATA_ROOT)), "source_checksum": source_file_checksum}
             common = {"sample_id": stable_id(sid, revision, provenance["source_split"], orig, raw), "source_id": sid, "source_revision": revision, "license_id": source["license_name"], "provenance": provenance, "raw_record": raw}
             try:
                 row_tool_calls: list[dict[str, Any]] = []
@@ -904,32 +905,75 @@ def validate_dataset(stage: str) -> int:
     for record in read_jsonl(DATA_ROOT / "processed/pilot/deduplicated.jsonl"):
         counts["input"] += 1
         rid = record.get("sample_id", record.get("trajectory_id"))
-        if rid in seen:
-            errors.append({"sample_id": rid, "reason": "duplicate sample identifier"})
-        seen.add(rid)
+        record_errors: list[str] = []
+        try:
+            hash(rid)
+            rid_key = rid
+        except TypeError:
+            rid_key = json.dumps(rid, ensure_ascii=False, sort_keys=True, default=str)
+            record_errors.append("sample or trajectory identifier must be a scalar string")
+        if rid_key in seen:
+            record_errors.append("duplicate sample identifier")
+        if rid is not None:
+            seen.add(rid_key)
         sid = record.get("source_id")
-        if sid not in registry:
-            errors.append({"sample_id": rid, "reason": f"unknown source {sid!r}"})
+        if not isinstance(sid, str) or sid not in registry:
+            record_errors.append(f"unknown source {sid!r}")
         else:
-            ok, reason = is_source_approved(registry[sid])
-            if not ok:
-                errors.append({"sample_id": rid, "reason": f"unapproved source {sid}: {reason}"})
-        for error in validate_record(record, schemas):
-            errors.append({"sample_id": rid, "reason": error})
-        counts["valid"] += 1
+            source = registry[sid]
+            try:
+                ensure_trainable(source, sid)
+            except PipelineError as exc:
+                record_errors.append(str(exc))
+            try:
+                expected_revision = parse_revision(source)
+                if record.get("source_revision") != expected_revision:
+                    record_errors.append("source_revision does not match the pinned registry revision")
+            except PipelineError as exc:
+                record_errors.append(str(exc))
+            if record.get("license_id") != source.get("license_name"):
+                record_errors.append("license_id does not match the reviewed source license")
+            provenance = record.get("provenance")
+            if not isinstance(provenance, dict):
+                record_errors.append("provenance is missing or not an object")
+            else:
+                if str(provenance.get("source_split", "")) != str(source.get("split", "train")):
+                    record_errors.append("provenance source_split does not match the source registry")
+                expected_synthetic = source.get("synthetic_or_human") == "synthetic"
+                if provenance.get("synthetic") is not expected_synthetic:
+                    record_errors.append("provenance synthetic flag does not match the source registry")
+                if not provenance.get("source_file"):
+                    record_errors.append("provenance source_file is missing")
+                checksum = provenance.get("source_checksum")
+                if not isinstance(checksum, str) or not re.fullmatch(r"[0-9a-f]{64}", checksum):
+                    record_errors.append("provenance source_checksum is missing or invalid")
+        record_errors.extend(validate_record(record, schemas))
+        errors.extend({"sample_id": rid, "reason": error} for error in record_errors)
+        if not record_errors:
+            counts["valid"] += 1
     tool_call_path = DATA_ROOT / "processed/pilot/tool_calls.jsonl"
     tool_calls = list(read_jsonl(tool_call_path)) if tool_call_path.exists() else []
     counts["tool_call_records"] = len(tool_calls)
     for call in tool_calls:
         sid = call.get("source_id")
-        if sid not in registry:
-            errors.append({"call_id": call.get("call_id"), "reason": f"unknown tool-call source {sid!r}"})
+        call_errors: list[str] = []
+        if not isinstance(sid, str) or sid not in registry:
+            call_errors.append(f"unknown tool-call source {sid!r}")
         else:
-            ok, reason = is_source_approved(registry[sid])
-            if not ok:
-                errors.append({"call_id": call.get("call_id"), "reason": f"unapproved tool-call source {sid}: {reason}"})
-        for error in validate_record(call, schemas):
-            errors.append({"call_id": call.get("call_id"), "reason": error})
+            source = registry[sid]
+            try:
+                ensure_trainable(source, sid)
+            except PipelineError as exc:
+                call_errors.append(str(exc))
+            try:
+                if call.get("source_revision") != parse_revision(source):
+                    call_errors.append("source_revision does not match the pinned registry revision")
+            except PipelineError as exc:
+                call_errors.append(str(exc))
+            if call.get("license_id") != source.get("license_name"):
+                call_errors.append("license_id does not match the reviewed source license")
+        call_errors.extend(validate_record(call, schemas))
+        errors.extend({"call_id": call.get("call_id"), "reason": error} for error in call_errors)
     if counts["input"] == 0:
         errors.append({"reason": "pilot training corpus is empty"})
     rejected = list(read_jsonl(DATA_ROOT / "processed/pilot/rejected.jsonl"))
