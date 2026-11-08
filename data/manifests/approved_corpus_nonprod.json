@@ -1,0 +1,11 @@
+{
+  "format": "aya-edge-corpus-manifest",
+  "version": 1,
+  "label": "NON-PRODUCTION",
+  "purpose": "mini-dataset fixture for dual-T4 smoke tokenizer only",
+  "files": [
+    "aya_edge_mini_dataset_v1/train.jsonl",
+    "aya_edge_mini_dataset_v1/validation.jsonl"
+  ],
+  "notes": "Do not treat this as an approved production corpus."
+}
