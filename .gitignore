@@ -20,6 +20,10 @@ data/reports/*.json
 data/reports/*.jsonl
 data/manifests/acquisition_run.jsonl
 data/reports/generated/
+data/
+!aya_edge/data/
+!aya_edge/data/**
+aya_edge/data/__pycache__/
 outputs/
 .research/
 *.egg-info/

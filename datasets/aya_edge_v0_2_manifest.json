@@ -1,0 +1,36 @@
+{
+  "dataset_id": "aya_edge_v0_2",
+  "status": "pipeline_manifest_only",
+  "production_corpus_included": false,
+  "stage_1_experimental_mixture": {
+    "general_language_and_knowledge": 0.5,
+    "instruction_and_agent_patterns": 0.5
+  },
+  "required_record_fields": [
+    "id",
+    "category",
+    "text",
+    "source",
+    "license"
+  ],
+  "quality_gates": [
+    "provenance and license snapshot",
+    "normalization",
+    "exact and normalized-text deduplication",
+    "category-stratified train/validation/test split",
+    "leakage detection",
+    "PII and unsafe-content review",
+    "contamination review against held-out evaluation"
+  ],
+  "approved_sources": [],
+  "candidate_sources_require_review": [
+    "OpenAssistant or other conversational corpora: verify exact revision and license",
+    "ToolBench/API-Bank derivatives: audit upstream APIs and redistribution terms",
+    "Public web text: collect only with documented rights and privacy filtering"
+  ],
+  "development_fixture": {
+    "source": "aya_edge_mini_dataset_v1",
+    "allowed_use": "pipeline smoke tests and overfit checks only",
+    "production_use": false
+  }
+}

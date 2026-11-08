@@ -7,7 +7,7 @@ from typing import Any
 
 import torch
 
-from .config import AyaEdgeConfig
+from ..config import AyaEdgeConfig
 
 
 def set_seed(seed: int, *, deterministic: bool = True) -> None:
