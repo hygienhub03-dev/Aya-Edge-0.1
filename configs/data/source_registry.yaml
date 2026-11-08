@@ -1,0 +1,381 @@
+schema_version: 1
+review_date: '2026-11-07'
+review_method: >-
+  Official Hugging Face dataset cards/APIs and pinned repository files, Wikimedia dump/legal/format documentation,
+  and official Berkeley/Gorilla BFCL sources were reviewed. Dataset payload files were not acquired. See docs/data/DATASET_LICENSING.md.
+sources:
+  - source_id: fineweb
+    dataset_name: FineWeb
+    repository: HuggingFaceFW/fineweb
+    revision: 9bb295ddab0e05d785b879661af7260fed5140fc
+    revision_kind: huggingface_commit
+    configuration: sample-10BT
+    split: train
+    source_url: https://huggingface.co/datasets/HuggingFaceFW/fineweb
+    license_name: ODC-By 1.0 plus Common Crawl Terms of Use
+    license_url: https://opendatacommons.org/licenses/by/1-0/
+    license_verified: true
+    commercial_use: Dataset/database rights permit commercial use subject to terms; page-level rights are not established.
+    redistribution: Conditional on ODC-By attribution/notices for the database and on separate rights in each page.
+    attribution_required: true
+    share_alike: false
+    additional_restrictions:
+      - Common Crawl terms defer to source-owner rights and require users to assess content legality.
+      - ODC-By does not grant independent rights in webpage contents.
+      - No comprehensive per-row content license manifest is published.
+    upstream_sources:
+      - Common Crawl web pages
+      - Datatrove extraction, filtering, and deduplication pipeline
+    synthetic_or_human: human-authored web content; not documented as synthetic
+    known_limitations:
+      - Dataset card narrative and current repository API disagree on crawl dates and corpus inventory.
+      - Dataset-level ODC-By does not clear copyright, privacy, or publicity rights in individual pages.
+    approval_status: blocked_pending_review
+    review_notes: >-
+      Small streaming sample only is proposed. Do not acquire until page-level rights, intended commercial use,
+      and source-owner terms are reviewed; validate selected revision/config inventory before acquisition.
+    review_evidence:
+      - https://huggingface.co/datasets/HuggingFaceFW/fineweb/raw/9bb295ddab0e05d785b879661af7260fed5140fc/README.md
+      - https://commoncrawl.org/terms-of-use
+      - https://opendatacommons.org/licenses/by/1-0/
+    use_class: stage1
+    normalizer:
+      kind: document
+      text_field: text
+      title_field: url
+      id_field: id
+
+  - source_id: nemotron_agentic_interactive
+    dataset_name: Nemotron-Agentic-v1 interactive_agent subset
+    repository: nvidia/Nemotron-Agentic-v1
+    revision: 650d590978ca35c8f1ecea2faf136e5fac421b62
+    revision_kind: huggingface_commit
+    configuration: default
+    split: interactive_agent
+    source_url: https://huggingface.co/datasets/nvidia/Nemotron-Agentic-v1
+    license_name: CC BY 4.0; Glaive Function Calling v2 component is identified as Apache-2.0 without row mapping
+    license_url: https://creativecommons.org/licenses/by/4.0/legalcode.en
+    license_verified: true
+    commercial_use: Dataset card says commercial use is permitted subject to CC BY attribution; upstream component rights remain unresolved.
+    redistribution: Conditional attribution/notices; do not redistribute until Glaive component scope and source lineage are clarified.
+    attribution_required: true
+    share_alike: false
+    additional_restrictions:
+      - Preserve CC BY attribution, license URI, notices, and modification statements.
+      - Apache-2.0 component mapping to records/components is not documented.
+      - Tool-set upstream sources are not enumerated per record.
+    upstream_sources:
+      - NVIDIA synthetic multi-turn agent and tool-environment generation
+      - Qwen3-235B-A22B-Thinking-2507
+      - Qwen3-32B
+      - GPT-OSS-120B
+      - Qwen3-235B-A22B-Instruct-2507
+      - Glaive Function Calling v2 is cited as an Apache-2.0 component
+      - NVIDIA Nemotron-Personas-USA is used for user-simulator seed data
+    synthetic_or_human: synthetic trajectories; tool sets collected from public datasets
+    known_limitations:
+      - Viewer metadata could not validate nested tool parameter schema or tool-result conventions.
+      - Glaive license scope and public tool-source lineage are not mapped to rows.
+    approval_status: blocked_pending_review
+    review_notes: >-
+      Preserve complete turns, tools, tool calls/results, UUID, used_in, license, and reasoning fields.
+      Clarify component licensing and validate nested schema before acquisition.
+    review_evidence:
+      - https://huggingface.co/datasets/nvidia/Nemotron-Agentic-v1/tree/650d590978ca35c8f1ecea2faf136e5fac421b62
+      - https://creativecommons.org/licenses/by/4.0/legalcode.en
+      - https://www.apache.org/licenses/LICENSE-2.0
+    use_class: stage1_agent_sft_candidate
+    normalizer:
+      kind: trajectory
+      messages_field: messages
+      category: tool_use
+
+  - source_id: nemotron_agentic_tool_calling
+    dataset_name: Nemotron-Agentic-v1 tool_calling subset
+    repository: nvidia/Nemotron-Agentic-v1
+    revision: 650d590978ca35c8f1ecea2faf136e5fac421b62
+    revision_kind: huggingface_commit
+    configuration: default
+    split: tool_calling
+    source_url: https://huggingface.co/datasets/nvidia/Nemotron-Agentic-v1
+    license_name: CC BY 4.0; Glaive Function Calling v2 component is identified as Apache-2.0 without row mapping
+    license_url: https://creativecommons.org/licenses/by/4.0/legalcode.en
+    license_verified: true
+    commercial_use: Dataset card says commercial use is permitted subject to CC BY attribution; upstream component rights remain unresolved.
+    redistribution: Conditional attribution/notices; do not redistribute until Glaive component scope and source lineage are clarified.
+    attribution_required: true
+    share_alike: false
+    additional_restrictions:
+      - Preserve CC BY attribution, license URI, notices, and modification statements.
+      - Apache-2.0 component mapping to records/components is not documented.
+      - Tool-set upstream sources are not enumerated per record.
+    upstream_sources:
+      - NVIDIA synthetic tool-calling data
+      - Qwen3-235B-A22B-Thinking-2507
+      - Qwen3-235B-A22B-Instruct-2507
+      - Public tool datasets of unspecified identity
+      - Glaive Function Calling v2 is cited as an Apache-2.0 component
+    synthetic_or_human: synthetic tool-calling records and tool sets collected from public datasets
+    known_limitations:
+      - Viewer metadata could not validate nested tool parameter schema or tool-result conventions.
+      - Upstream tool-set sources and component licenses are not mapped to records.
+    approval_status: blocked_pending_review
+    review_notes: >-
+      Preserve complete trajectories and tool-call/result boundaries. Do not treat a predetermined tool-call list
+      as proof that the model independently selected tools.
+    review_evidence:
+      - https://huggingface.co/datasets/nvidia/Nemotron-Agentic-v1/tree/650d590978ca35c8f1ecea2faf136e5fac421b62
+      - https://creativecommons.org/licenses/by/4.0/legalcode.en
+      - https://www.apache.org/licenses/LICENSE-2.0
+    use_class: stage1_agent_sft_candidate
+    normalizer:
+      kind: trajectory
+      messages_field: messages
+      category: tool_use
+
+  - source_id: nemotron_instruction_chat_if
+    dataset_name: Nemotron-Instruction-Following-Chat-v1 chat_if subset
+    repository: nvidia/Nemotron-Instruction-Following-Chat-v1
+    revision: 83dcd3aded0d289b0bbc018d3f9af4c5dd4005df
+    revision_kind: huggingface_commit
+    configuration: default
+    split: chat_if
+    source_url: https://huggingface.co/datasets/nvidia/Nemotron-Instruction-Following-Chat-v1
+    license_name: ODC-By 1.0 for chat_if subset
+    license_url: https://opendatacommons.org/licenses/by/1-0/
+    license_verified: true
+    commercial_use: Card says commercial use is permitted subject to dataset license; upstream prompt/model rights remain unresolved.
+    redistribution: ODC-By database attribution/notice requirements; per-record inherited rights not fully mapped.
+    attribution_required: true
+    share_alike: false
+    additional_restrictions:
+      - Preserve record-level license metadata and ODC-By attribution/notice.
+      - HF repository header advertises CC BY 4.0 while the card assigns ODC-By to chat_if.
+      - Upstream v2 mixed-source licenses and model terms are not mapped to refreshed chat records.
+    upstream_sources:
+      - nvidia/Nemotron-Post-Training-Dataset-v2
+      - Synthetic refresh using GPT-OSS-120B and Qwen3 family models
+      - Upstream v2 contains public/open and synthetic prompts, including WildChat ODC-By and StackOverflow CC BY-SA subsets
+    synthetic_or_human: synthetic multi-turn refresh derived from upstream open/synthetic post-training data
+    known_limitations:
+      - Subset-level card license conflicts with repository-wide metadata label.
+      - No full viewer feature schema was returned; actual nested fields were inspected only in rendered preview.
+    approval_status: blocked_pending_review
+    review_notes: >-
+      Keep chat_if separate from structured_outputs. Obtain clarification on upstream source rights and whether
+      inherited third-party license obligations apply before commercial redistribution or training release.
+    review_evidence:
+      - https://huggingface.co/datasets/nvidia/Nemotron-Instruction-Following-Chat-v1/raw/83dcd3aded0d289b0bbc018d3f9af4c5dd4005df/README.md
+      - https://opendatacommons.org/licenses/by/1-0/
+      - https://huggingface.co/datasets/nvidia/Nemotron-Post-Training-Dataset-v2
+    use_class: stage1_instruction_sft_candidate
+    normalizer:
+      kind: conversation
+      messages_field: messages
+      category: instruction
+
+  - source_id: nemotron_instruction_structured_outputs
+    dataset_name: Nemotron-Instruction-Following-Chat-v1 structured_outputs subset
+    repository: nvidia/Nemotron-Instruction-Following-Chat-v1
+    revision: 83dcd3aded0d289b0bbc018d3f9af4c5dd4005df
+    revision_kind: huggingface_commit
+    configuration: default
+    split: structured_outputs
+    source_url: https://huggingface.co/datasets/nvidia/Nemotron-Instruction-Following-Chat-v1
+    license_name: CC BY 4.0 for structured_outputs subset
+    license_url: https://creativecommons.org/licenses/by/4.0/legalcode.en
+    license_verified: true
+    commercial_use: Card says commercial use is permitted subject to CC BY attribution; upstream prompt/model rights remain unresolved.
+    redistribution: Conditional on CC BY attribution, license URI, change notice, and upstream rights review.
+    attribution_required: true
+    share_alike: false
+    additional_restrictions:
+      - Preserve record-level source/license metadata and identify transformations.
+      - Upstream prompt lineage and model terms are not reconciled for refreshed examples.
+    upstream_sources:
+      - Synthetic JSON/schema-constrained output generation described by NVIDIA
+      - nvidia/Nemotron-Post-Training-Dataset-v2 upstream lineage
+      - GPT-OSS-120B and Qwen3 family generation/judge models
+    synthetic_or_human: synthetic structured-output demonstrations
+    known_limitations:
+      - Card assigns CC BY 4.0 to this subset; top-level repository metadata is not subset-specific.
+      - Actual JSON schema examples were visible in the card preview, but payload rows were not downloaded.
+    approval_status: blocked_pending_review
+    review_notes: >-
+      Keep separate from chat_if and validate each JSON output against its in-record schema where supplied.
+      Clarify upstream licenses and model terms before inclusion.
+    review_evidence:
+      - https://huggingface.co/datasets/nvidia/Nemotron-Instruction-Following-Chat-v1/raw/83dcd3aded0d289b0bbc018d3f9af4c5dd4005df/README.md
+      - https://creativecommons.org/licenses/by/4.0/legalcode.en
+      - https://huggingface.co/datasets/nvidia/Nemotron-Post-Training-Dataset-v2
+    use_class: stage1_instruction_sft_candidate
+    normalizer:
+      kind: conversation
+      messages_field: messages
+      category: instruction
+      structured_output: true
+
+  - source_id: wikimedia_enwiki
+    dataset_name: English Wikipedia database dump
+    repository: null
+    revision: '20261001'
+    revision_kind: dated_dump_snapshot
+    configuration: enwiki pages-articles text-only candidate
+    split: pages-articles
+    source_url: https://dumps.wikimedia.org/enwiki/20261001/
+    license_name: CC BY-SA 4.0 and GFDL, with page-level exceptions and imported-content terms
+    license_url: https://dumps.wikimedia.org/legal.html
+    license_verified: true
+    commercial_use: Generally permitted subject to page-level attribution, license, and source-owner terms.
+    redistribution: Conditional attribution and ShareAlike for adapted text; imported and media items can have additional terms.
+    attribution_required: true
+    share_alike: true
+    additional_restrictions:
+      - Do not include non-free/fair-use media.
+      - Per-page imported content and license exceptions require inspection.
+      - Model-weight/output implications of ShareAlike are legally unresolved.
+      - XML dump format is scheduled for sunset in January 2027.
+    upstream_sources:
+      - Human-authored English Wikipedia pages and revision history
+      - Imported third-party text with page-specific license/credit terms
+    synthetic_or_human: collaboratively human-authored content; not documented as synthetic
+    known_limitations:
+      - Snapshot job label and general dump FAQ disagree on namespaces included by pages-articles.
+      - Actual XML payload was not downloaded or inspected.
+      - Dump is not a complete or transactionally consistent database backup.
+    approval_status: blocked_pending_review
+    review_notes: >-
+      Do not acquire until page-level license filtering, attribution export, ShareAlike obligations, and dump namespace
+      selection are reviewed. A dated snapshot is pinned; no file shard was selected or downloaded.
+    review_evidence:
+      - https://dumps.wikimedia.org/enwiki/20261001/dumpstatus.json
+      - https://dumps.wikimedia.org/legal.html
+      - https://meta.wikimedia.org/wiki/Data_dumps/Dump_format
+      - https://meta.wikimedia.org/wiki/Data_dumps/FAQ
+    use_class: stage1_general_candidate
+    normalizer:
+      kind: document
+      text_field: text
+      title_field: title
+      id_field: page_id
+
+  - source_id: nemotron_rl_conversational_pivot
+    dataset_name: Nemotron-RL-Agentic-Conversational-Tool-Use-Pivot-v1
+    repository: nvidia/Nemotron-RL-Agentic-Conversational-Tool-Use-Pivot-v1
+    revision: bfc7a4dd55ec1424cc3761ceacdd85a5743b4f4e
+    revision_kind: huggingface_commit
+    configuration: default
+    split: train
+    source_url: https://huggingface.co/datasets/nvidia/Nemotron-RL-Agentic-Conversational-Tool-Use-Pivot-v1
+    license_name: CC BY 4.0
+    license_url: https://creativecommons.org/licenses/by/4.0/legalcode
+    license_verified: true
+    commercial_use: Card says commercial use is permitted subject to CC BY attribution; upstream trajectory rights remain unresolved.
+    redistribution: Conditional attribution, license URI, change notice, and clarification of unidentified upstream trajectory sources.
+    attribution_required: true
+    share_alike: false
+    additional_restrictions:
+      - Later-RL/post-training candidate only; never Stage 1.
+      - README and datasets-server record counts/sizes disagree materially.
+      - No source trajectory corpus or per-record rights inventory is provided.
+    upstream_sources:
+      - Existing expert tool-use trajectories of unspecified origin
+      - DeepSeek-R1-0528
+      - DeepSeek-V3.2
+      - Qwen3-235B-A22B-Thinking-2507
+      - Qwen3-32B
+      - GPT-OSS-120B
+      - Qwen3-235B-A22B-Instruct-2507
+    synthetic_or_human: synthetic labels/processing over expert tool-use trajectories; mixed provenance not fully mapped
+    known_limitations:
+      - README says 170,320 rows and about 3.0 GB; viewer reports 96,968 rows and about 1.586 GB in memory.
+      - One train split only; no validation/test split.
+      - Not evidence of verified RL reward or verifier behavior.
+    approval_status: blocked_pending_review
+    review_notes: >-
+      Keep outside Stage 1. Resolve provenance and row-count discrepancy and validate NeMo Gym compatibility before
+      later post-training acquisition.
+    review_evidence:
+      - https://huggingface.co/datasets/nvidia/Nemotron-RL-Agentic-Conversational-Tool-Use-Pivot-v1/raw/bfc7a4dd55ec1424cc3761ceacdd85a5743b4f4e/README.md
+      - https://huggingface.co/datasets/nvidia/Nemotron-RL-Agentic-Conversational-Tool-Use-Pivot-v1
+      - https://creativecommons.org/licenses/by/4.0/legalcode
+    use_class: later_rl
+
+  - source_id: nemotron_rl_function_pivot
+    dataset_name: Nemotron-RL-Agentic-Function-Calling-Pivot-v1
+    repository: nvidia/Nemotron-RL-Agentic-Function-Calling-Pivot-v1
+    revision: 0ac34ec81bb6976d3746407df306a57ce48f0bd8
+    revision_kind: huggingface_commit
+    configuration: default
+    split: train
+    source_url: https://huggingface.co/datasets/nvidia/Nemotron-RL-Agentic-Function-Calling-Pivot-v1
+    license_name: CC BY 4.0; card also mentions unscoped Apache-2.0 and MIT licenses
+    license_url: https://creativecommons.org/licenses/by/4.0/legalcode
+    license_verified: true
+    commercial_use: Card says commercial use is permitted subject to CC BY attribution; upstream rights remain unresolved.
+    redistribution: Conditional attribution; Apache/MIT scope and upstream source rights need clarification.
+    attribution_required: true
+    share_alike: false
+    additional_restrictions:
+      - Later-RL/post-training candidate only; never Stage 1.
+      - README, viewer, and repository artifact counts/splits disagree.
+      - NeMo Gym validation artifact is separately sourced and marked license TBD; excluded.
+    upstream_sources:
+      - Existing expert tool-use trajectories of unspecified origin
+      - DeepSeek-V3.2
+      - GLM-4.6
+      - GPT-OSS-120B
+      - Kimi-K2-Instruct
+    synthetic_or_human: synthetic/agent-generated labels over existing trajectories; provenance is underspecified
+    known_limitations:
+      - Card says 8,458 train rows and validation; viewer reports 9,620 train rows and repo contains train.jsonl only.
+      - Card's Apache-2.0 and MIT references are not scoped to files/components.
+      - Expected actions and scenario fields are variant/weakly typed.
+    approval_status: blocked_pending_review
+    review_notes: >-
+      Keep outside Stage 1. Resolve license scope, provenance, and artifact discrepancies; validate tool schema and
+      NeMo Gym verifier requirements before later-stage use.
+    review_evidence:
+      - https://huggingface.co/datasets/nvidia/Nemotron-RL-Agentic-Function-Calling-Pivot-v1/resolve/0ac34ec81bb6976d3746407df306a57ce48f0bd8/README.md
+      - https://github.com/NVIDIA-NeMo/Gym
+      - https://creativecommons.org/licenses/by/4.0/legalcode
+    use_class: later_rl
+
+  - source_id: bfcl_v4
+    dataset_name: Berkeley Function Calling Leaderboard v4
+    repository: ShishirPatil/gorilla
+    revision: f7cf7359b7ac615a0b294831c5ba2bc95ee4a000
+    revision_kind: github_commit
+    configuration: BFCL_v4
+    split: evaluation_only
+    source_url: https://gorilla.cs.berkeley.edu/leaderboard.html
+    license_name: Apache License 2.0
+    license_url: https://www.apache.org/licenses/LICENSE-2.0
+    license_verified: true
+    commercial_use: Apache-2.0 permits commercial use subject to notices; user-contributed/API-derived content rights need review before redistribution.
+    redistribution: Apache-2.0 license/NOTICE conditions; do not redistribute questionable third-party items without rights review.
+    attribution_required: true
+    share_alike: false
+    additional_restrictions:
+      - Held out for evaluation only; never train on BFCL prompts, schemas, expected answers, or derived examples.
+      - BFCL V4 evaluator/version must be pinned; Hugging Face card is stale relative to V4.
+      - No per-record rights inventory for third-party API documentation and user-contributed examples.
+    upstream_sources:
+      - Berkeley-designed function-call examples
+      - User-submitted live function documentation and queries
+      - Third-party public REST/API documentation
+    synthetic_or_human: manually authored examples and user-contributed live/API material; mixed provenance
+    known_limitations:
+      - No conventional training split; BFCL V4 categories are evaluation sets.
+      - Exact third-party rights/attribution for all records is not established.
+    approval_status: approved_with_conditions
+    conditions_satisfied: true
+    review_notes: >-
+      Verified for version-pinned evaluation only. It is excluded by use_class and the evaluation holdout policy from
+      every training mixture. Keep all categories and expected outputs out of training and report unresolved source-rights
+      limits if redistributing benchmark payloads.
+    review_evidence:
+      - https://gorilla.cs.berkeley.edu/leaderboard.html
+      - https://github.com/ShishirPatil/gorilla/blob/f7cf7359b7ac615a0b294831c5ba2bc95ee4a000/LICENSE
+      - https://github.com/ShishirPatil/gorilla/blob/f7cf7359b7ac615a0b294831c5ba2bc95ee4a000/berkeley-function-call-leaderboard/bfcl_eval/data/README.md
+    use_class: held_out

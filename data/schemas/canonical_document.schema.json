@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aya-edge.local/schemas/canonical_document.schema.json",
+  "title": "AYA Edge canonical text document",
+  "type": "object",
+  "required": ["sample_id", "source_id", "source_revision", "license_id", "category", "title", "text", "provenance"],
+  "properties": {
+    "sample_id": {"type": "string", "minLength": 1},
+    "source_id": {"type": "string", "minLength": 1},
+    "source_revision": {"type": "string", "pattern": "^([0-9a-f]{40}|[0-9]{8})$"},
+    "license_id": {"type": "string", "minLength": 1},
+    "category": {"const": "general"},
+    "title": {"type": "string"},
+    "text": {"type": "string", "minLength": 1},
+    "metadata": {"type": "object"},
+    "provenance": {"$ref": "provenance.schema.json"},
+    "raw_record": {"type": "object"},
+    "token_count": {"type": "integer", "minimum": 0},
+    "tokenizer_id": {"type": "string"}
+  },
+  "additionalProperties": false
+}

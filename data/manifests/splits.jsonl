@@ -1,0 +1,1 @@
+{"stage":"pilot","status":"not_generated","seed":42,"train_records":0,"validation_records":0,"test_records":0,"reason":"No approved external payloads were acquired; split generation requires a nonempty normalized pilot corpus."}
