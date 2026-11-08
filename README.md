@@ -46,7 +46,10 @@ Initial distillation teacher: `openbmb/MiniCPM5-1B`. The teacher is dense; this 
 - [AYA Edge 0.2 architecture](docs/research/AYA_EDGE_02_ARCHITECTURE_SPEC.md)
 - [AYA Edge 0.2 parameter budget](docs/research/AYA_EDGE_02_PARAMETER_BUDGET.md)
 - [Tokenizer specification](docs/research/AYA_EDGE_TOKENIZER_SPEC.md)
+- [Production 32K BPE tokenizer specification](docs/research/AYA_EDGE_PRODUCTION_TOKENIZER_SPEC.md)
 - [Dataset strategy](docs/research/AYA_EDGE_DATASET_STRATEGY.md)
+- [Dataset acquisition and licensing](docs/data/DATA_ACQUISITION.md)
+- [Dataset/tokenizer audit](docs/data/TOKENIZER_AUDIT.md)
 - [MoE routing report](docs/research/AYA_EDGE_MOE_ROUTING_REPORT.md)
 - [Agent evaluation specification](docs/research/AYA_EDGE_AGENT_EVALUATION_SPEC.md)
 - [Training pipeline](docs/research/AYA_EDGE_TRAINING_PIPELINE.md)
@@ -64,4 +67,5 @@ Initial distillation teacher: `openbmb/MiniCPM5-1B`. The teacher is dense; this 
 - Router dispatch is a simple prototype implementation, not an optimised sparse kernel.
 - The Kaggle notebook is a reproducible smoke-test/prototype harness; it has not been claimed as successfully executed on Kaggle until run there.
 - The 0.2 training script is a resumable pipeline scaffold; the byte tokenizer and small fixtures are development adapters, not the approved production corpus/tokenizer.
+- The production BPE trainer is approval-gated; no production tokenizer artifact or checksum is included until the corpus is cleared.
 - Unit tests are provided but must be run in the target environment.

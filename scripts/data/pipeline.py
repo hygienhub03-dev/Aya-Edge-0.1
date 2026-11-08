@@ -767,6 +767,7 @@ class TokenCounter:
         self.kind = ""
         if tokenizer_id == "aya-edge-dev-byte-v1":
             self.kind = "utf8_byte_ids"
+        elif tokenizer_id in {"tokenizers-json", "aya-edge-production-bpe-v1"}:
         elif tokenizer_id == "tokenizers-json":
             if not tokenizer_path:
                 raise PipelineError("--tokenizer-path is required for tokenizers-json")
@@ -775,6 +776,23 @@ class TokenCounter:
             except ImportError as exc:
                 raise PipelineError("Install tokenizers with pip install -e '.[data]'") from exc
             self.backend = Tokenizer.from_file(tokenizer_path)
+            vocab_size = self.backend.get_vocab_size(with_added_tokens=True)
+            if vocab_size != 32768:
+                raise PipelineError(f"production tokenizer must have vocabulary size 32768, got {vocab_size}")
+            expected_special_ids = {
+                "<|pad|>": 0, "<|unk|>": 1, "<|bos|>": 2, "<|eos|>": 3,
+                "<|im_start|>": 4, "<|im_sep|>": 5, "<|im_end|>": 6,
+                "<|tool_call|>": 7, "<|tool_result|>": 8, "<|analysis|>": 9,
+                "<|final|>": 10, "<|commentary|>": 11, "<|json|>": 12,
+                "<|refusal|>": 13, "<|end_of_task|>": 14, "<|meta_sep|>": 15,
+            }
+            vocab = self.backend.get_vocab()
+            mismatches = {token: (vocab.get(token), expected) for token, expected in expected_special_ids.items() if vocab.get(token) != expected}
+            if mismatches:
+                raise PipelineError(f"production tokenizer special-token IDs do not match: {mismatches}")
+            self.kind = "production_bpe"
+        else:
+            raise PipelineError("Tokenizer must be explicitly selected as aya-edge-dev-byte-v1 or aya-edge-production-bpe-v1 with a pinned local tokenizer file")
             self.kind = "tokenizers_json"
         else:
             raise PipelineError("Tokenizer must be explicitly selected as aya-edge-dev-byte-v1 or tokenizers-json with a pinned local tokenizer file")

@@ -16,6 +16,7 @@ The RL pivot datasets are later-stage candidates only and are not members of the
 
 ## Token accounting limit
 
+The pilot-only development proxy `aya-edge-dev-byte-v1` counts UTF-8 bytes as IDs. It is useful for deterministic pipeline tests but is **not** a production tokenizer and cannot support the model's token-budget or embedding vocabulary claims. The merged 0.2 model defines `vocab_size: 32768`; the new production path is `aya-edge-production-bpe-v1`, but no approved artifact or checksum exists yet. The 268-ID adapter therefore remains blocked for production accounting; see `TOKENIZER_AUDIT.md`.
 The pilot-only development proxy `aya-edge-dev-byte-v1` counts UTF-8 bytes as IDs. It is useful for deterministic pipeline tests but is **not** a production tokenizer and cannot support the model's token-budget or embedding vocabulary claims. The open 0.2 PR defines `vocab_size: 32768` while its fixed byte tokenizer defines 268 total IDs. Stable `main` separately reports 32,000. This is a blocking mismatch; see `TOKENIZER_AUDIT.md`.
 
 Before any production mixture is accepted, the model/tokenizer owners must resolve the vocabulary mismatch, pin a tokenizer artifact and checksum, use that exact artifact in training/inference/counting, and set `production_required: true`. Then acquire only source-approved subsets, count training tokens with the production tokenizer, and regenerate the target/actual mixture report, including per-source token shares and deviations. No Stage 1 training is authorized by this configuration.

@@ -54,6 +54,7 @@ The explicit acquisition, checksums, source, and split manifests record this no-
 
 1. Eight sources remain `blocked_pending_review` for unresolved content rights, component licenses, subset terms, upstream provenance, or rights/namespace obligations. See `DATASET_LICENSING.md`.
 2. No raw rows were acquired, so sample-level format checks, corruption/quality rates, rejection examples and source-specific cleaning have not been observed.
+3. The 268-ID byte adapter still cannot satisfy the `32768` model vocabulary. The production BPE contract and approval-gated trainer are now present, but no approved tokenizer artifact/checksum exists. Generate and pin one before production token counts or training.
 3. PR #2 has an unresolved `32768` model vocabulary vs `268` tokenizer-ID mismatch; stable `main`'s 32,000 setting is separate. Pin/reconcile a production tokenizer before token counts or training.
 4. BFCL and the RL evaluation partitions remain excluded; no actual corpus-to-test contamination comparison occurred.
 5. Wikipedia snapshot namespace ambiguity, per-page exceptions, attribution/ShareAlike plan, and XML sunset need review before a dump shard can be processed.
