@@ -90,6 +90,7 @@ class TopKMoE(nn.Module):
         super().__init__()
         self.n_experts = cfg.n_experts
         self.top_k = cfg.top_k
+        self.router_z_loss_weight = float(cfg.router_z_loss_weight)
         self.router = nn.Linear(cfg.d_model, cfg.n_experts, bias=False)
         self.experts = nn.ModuleList(
             [SwiGLU(cfg.d_model, cfg.ffn_dim) for _ in range(cfg.n_experts)]
@@ -121,12 +122,16 @@ class TopKMoE(nn.Module):
         # Switch-style load-balancing auxiliary loss
         assignment = F.one_hot(indices, self.n_experts).float().mean(dim=(0, 1))
         importance = probs.mean(dim=0)
-        aux_loss = self.n_experts * torch.sum(assignment * importance)
+        balance_loss = self.n_experts * torch.sum(assignment * importance)
+        router_z_loss = logits.logsumexp(dim=-1).square().mean()
+        aux_loss = balance_loss + self.router_z_loss_weight * router_z_loss
         safe_probs = probs.clamp_min(1e-9)
         self.last_routing_stats = {
             "assignment_fraction": assignment.detach(),
             "importance_fraction": importance.detach(),
             "router_entropy": (-(safe_probs * safe_probs.log()).sum(dim=-1).mean()).detach(),
+            "balance_loss": balance_loss.detach(),
+            "router_z_loss": router_z_loss.detach(),
             "selected_expert_ids": indices.detach(),
         }
 

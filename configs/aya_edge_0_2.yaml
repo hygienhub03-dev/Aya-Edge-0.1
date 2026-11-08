@@ -1,0 +1,39 @@
+model:
+  vocab_size: 32768
+  d_model: 672
+  n_layers: 12
+  n_heads: 8
+  latent_dim: 192
+  ffn_dim: 1024
+  n_experts: 10
+  top_k: 2
+  use_shared_expert: true
+  router_z_loss_weight: 0.0001
+  max_seq_len: 1024
+
+# Approximate target budget: 310,115,904 trainable parameters with tied embeddings.
+# This is a total-parameter target; the structural active estimate includes top_k
+# routed experts plus the shared expert and is not a FLOP measurement.
+architecture:
+  target_total_parameters: 310000000
+  tolerance_fraction: 0.02
+  dispatch: python_reference
+  attention: mla_inspired_latent_kv
+  status: research_candidate_not_production_ready
+
+training:
+  seed: 42
+  batch_size: 1
+  gradient_accumulation_steps: 16
+  learning_rate: 0.0002
+  weight_decay: 0.1
+  warmup_steps: 1000
+  max_steps: 100000
+  max_grad_norm: 1.0
+  aux_loss_weight: 0.01
+  sequence_length: 128
+  validation_batches: 8
+  precision: auto
+  checkpoint_interval_steps: 500
+  validation_interval_steps: 500
+  dataset_manifest: datasets/aya_edge_v0_2_manifest.json

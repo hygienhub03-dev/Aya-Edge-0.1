@@ -9,6 +9,9 @@ venv/
 *.safetensors
 checkpoints/
 data/
+!aya_edge/data/
+!aya_edge/data/**
+aya_edge/data/__pycache__/
 outputs/
 .research/
 *.egg-info/
