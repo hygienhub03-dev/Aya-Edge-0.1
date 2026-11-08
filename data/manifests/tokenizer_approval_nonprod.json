@@ -1,0 +1,13 @@
+{
+  "approved": true,
+  "purpose": "NON-PRODUCTION only — dual-T4 smoke test and local validation",
+  "label": "NON-PRODUCTION",
+  "source_registry_revision": "mini-dataset-v1-for-smoke",
+  "license_audit_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "notes": [
+    "This record deliberately uses the mini fixture corpus.",
+    "It must never be used for real pretraining or published as a production artifact.",
+    "The resulting tokenizer.json is for dual-T4 DDP smoke and contract validation only."
+  ],
+  "created_for": "dual_t4_ddp_smoke real-tokenizer path"
+}
