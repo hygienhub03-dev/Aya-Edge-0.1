@@ -6,7 +6,7 @@
 
 - Python 3.12.3 on Ubuntu Linux sandbox.
 - pytest 9.2.0; PyYAML 6.0.3; jsonschema 4.26.0; pandas 3.1.0.
-- PyTorch is not installed in the local audit environment, so the existing model test suite cannot collect locally. The GitHub Actions repository-test job installs the CPU PyTorch wheel before running the full suite.
+- PyTorch is not installed in the local audit environment, so the existing model test suite cannot collect locally. The successful GitHub Actions repository-test job installed CPU PyTorch and ran the full suite.
 - `datasets`, `huggingface-hub`, `pyarrow`, and `tokenizers` are not installed in the audit environment; no external payload was acquired. Those are declared as optional `.[data]` dependencies for an approved Kaggle T4 acquisition environment. Data acceptance tests do not require downloading datasets.
 - All experiment payload paths are environment-configurable (`AYA_DATA_ROOT`, `HF_HOME`); raw/cached data are excluded from Git.
 
@@ -19,7 +19,8 @@
 | `python3 scripts/data/download_datasets.py --config configs/data/acquisition.yaml --stage pilot` | Exit 0; reported no Stage 1 sources approved/enabled and downloaded no payload. |
 | `python3 scripts/data/run_acceptance_tests.py --stage pilot` | **Passed: 30 tests in 0.17 seconds**, including invalid-record accounting and a once-per-file checksum regression. |
 | `python3 scripts/data/check_ci.py --base-ref origin/main` | **Passed**; scanned 67 changed files for YAML, JSON Schema, notebook syntax, disabled acquisition sources, dataset payloads and credential material. |
-| `python3 -m pytest -q` | Local attempt stopped at collection because `torch` is not installed (`ModuleNotFoundError`). The new Actions job installs CPU PyTorch and will run this full repository suite. |
+| GitHub Actions run `42484521742` at `85870c1546e98b864fcc7714b2a441f0d5459072` | **Passed**: data acceptance/hygiene job and existing repository-test job. The full `python -m pytest -q` run passed **38 tests** in 3.11 seconds (one harmless PyTorch warning about missing NumPy); GitGuardian also passed. |
+| `python3 -m pytest -q` (local sandbox) | Local attempt stopped at collection because `torch` is not installed (`ModuleNotFoundError`); the dependency-equipped GitHub Actions result above is the repository-wide test result. |
 | `python3 scripts/data/verify_licenses.py --config configs/data/source_registry.yaml --strict` | Exit 2, expected: eight blocked acquisition sources prevent a strict acquisition approval. |
 | `python3 scripts/data/validate_dataset.py --stage pilot` | Exit 1, expected: empty pilot, absent token-count manifest, and absent token-count-aware mixture are hard failures. No empty-corpus pass is claimed. |
 | `python3 scripts/data/generate_report.py --stage pilot` | Executed in an isolated temporary `AYA_DATA_ROOT`; wrote a valid reproducibility summary with zero acquired sources. This is not a data-quality pass. |
