@@ -47,6 +47,7 @@ Initial distillation teacher: `openbmb/MiniCPM5-1B`. The teacher is dense; this 
 - [AYA Edge 0.2 parameter budget](docs/research/AYA_EDGE_02_PARAMETER_BUDGET.md)
 - [Tokenizer specification](docs/research/AYA_EDGE_TOKENIZER_SPEC.md)
 - [Production 32K BPE tokenizer specification](docs/research/AYA_EDGE_PRODUCTION_TOKENIZER_SPEC.md)
+- [Dual-T4 DDP smoke-test protocol](docs/research/AYA_EDGE_02_DUAL_T4_SMOKE.md)
 - [Dataset strategy](docs/research/AYA_EDGE_DATASET_STRATEGY.md)
 - [Dataset acquisition and licensing](docs/data/DATA_ACQUISITION.md)
 - [Dataset/tokenizer audit](docs/data/TOKENIZER_AUDIT.md)
@@ -60,6 +61,7 @@ Initial distillation teacher: `openbmb/MiniCPM5-1B`. The teacher is dense; this 
 - [Stage 5 — Distillation](docs/stage-5/README.md)
 - [Kaggle Tesla T4 training notebook](notebooks/AYA_Edge_T4_Training.ipynb)
 - [AYA Edge 0.2 Kaggle Tesla T4 notebook](notebooks/AYA_Edge_02_T4_Training.ipynb)
+- [AYA Edge 0.2 dual-T4 DDP smoke notebook](notebooks/AYA_Edge_02_Dual_T4_DDP_Smoke.ipynb)
 
 ## Limitations / next steps
 
