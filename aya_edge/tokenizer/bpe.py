@@ -2,7 +2,12 @@
 
 The byte tokenizer remains the offline development adapter. This module wraps
 Hugging Face ``tokenizers`` for the approved production direction: byte-level
-BPE with a fixed 32,768 vocabulary and fixed IDs 0--15 for control tokens.
+BPE with a fixed 32,768 vocabulary and the following locked ID layout:
+
+  0–15:     16 reserved special tokens
+  16–271:   256 byte-alphabet fallback tokens (ByteLevel initial alphabet)
+  272–32767: 32,496 learned BPE entries
+
 No production artifact is checked in until corpus approval is complete.
 """
 from __future__ import annotations
@@ -14,6 +19,11 @@ from pathlib import Path
 from typing import Iterable, Mapping, Sequence
 
 PRODUCTION_VOCAB_SIZE = 32_768
+SPECIAL_TOKEN_COUNT = 16
+BYTE_FALLBACK_START = 16
+BYTE_FALLBACK_END = 271  # inclusive; 256 tokens
+BPE_START = 272
+
 SPECIAL_TOKENS: tuple[str, ...] = (
     "<|pad|>", "<|unk|>", "<|bos|>", "<|eos|>",
     "<|im_start|>", "<|im_sep|>", "<|im_end|>", "<|tool_call|>",
@@ -21,6 +31,11 @@ SPECIAL_TOKENS: tuple[str, ...] = (
     "<|json|>", "<|refusal|>", "<|end_of_task|>", "<|meta_sep|>",
 )
 SPECIAL_TOKEN_IDS = {token: index for index, token in enumerate(SPECIAL_TOKENS)}
+
+assert len(SPECIAL_TOKENS) == SPECIAL_TOKEN_COUNT
+assert BYTE_FALLBACK_END - BYTE_FALLBACK_START + 1 == 256
+assert BPE_START == BYTE_FALLBACK_END + 1
+assert PRODUCTION_VOCAB_SIZE - BPE_START == 32_496
 
 
 def _require_tokenizers():
@@ -81,6 +96,11 @@ class ProductionTokenizerManifest:
             "vocab_size": self.vocab_size,
             "special_tokens": list(self.special_tokens),
             "special_token_ids": dict(SPECIAL_TOKEN_IDS),
+            "id_layout": {
+                "specials": "0-15",
+                "byte_fallback": "16-271",
+                "learned_bpe": "272-32767",
+            },
         }
 
 
@@ -100,9 +120,25 @@ class ProductionBPETokenizer:
         if self.vocab_size != PRODUCTION_VOCAB_SIZE:
             raise ValueError(f"expected vocabulary size {PRODUCTION_VOCAB_SIZE}, got {self.vocab_size}")
         vocab = self._backend.get_vocab()
+        # 1. Special tokens must occupy exactly IDs 0-15
         for token, expected_id in SPECIAL_TOKEN_IDS.items():
-            if vocab.get(token) != expected_id:
-                raise ValueError(f"special token {token} must have ID {expected_id}, got {vocab.get(token)}")
+            actual = vocab.get(token)
+            if actual != expected_id:
+                raise ValueError(f"special token {token} must have ID {expected_id}, got {actual}")
+        # 2. Invert to inspect ID occupancy
+        id_to_token = {tid: tok for tok, tid in vocab.items()}
+        # 3. Every ID in the byte-fallback block must be occupied (guarantees 256 fallback tokens)
+        missing = [i for i in range(BYTE_FALLBACK_START, BYTE_FALLBACK_END + 1) if i not in id_to_token]
+        if missing:
+            raise ValueError(
+                f"byte-fallback block 16-271 incomplete; missing IDs {missing[:8]}{"..." if len(missing) > 8 else ""} "
+                f"(expected 256 ByteLevel alphabet tokens)"
+            )
+        # 4. No special token may appear outside 0-15
+        for token, tid in vocab.items():
+            if token in SPECIAL_TOKEN_IDS and tid >= BYTE_FALLBACK_START:
+                raise ValueError(f"special token {token} must not occupy ID {tid}")
+        # Layout is therefore: 0-15 specials, 16-271 byte alphabet, 272+ learned merges
 
     def encode(self, text: str, *, add_bos: bool = False, add_eos: bool = False) -> list[int]:
         if not isinstance(text, str):
@@ -151,6 +187,8 @@ def train_production_bpe(
     tokenizer = Tokenizer(BPE(unk_token="<|unk|>"))
     tokenizer.pre_tokenizer = ByteLevel(add_prefix_space=False)
     tokenizer.decoder = ByteLevelDecoder()
+    # special_tokens first → IDs 0-15; ByteLevel alphabet is then placed at 16-271;
+    # remaining slots become the learned merges (272+).
     trainer = BpeTrainer(
         vocab_size=PRODUCTION_VOCAB_SIZE,
         min_frequency=min_frequency,
