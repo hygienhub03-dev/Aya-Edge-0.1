@@ -48,8 +48,8 @@ def score_trace(
     expected_arguments: list[Mapping[str, Any]] | None = None,
     recovered_after_failure: bool | None = None,
     observed_results: bool = True,
-    intent_correct: bool = True,
-    plan_correct: bool = True,
+    intent_correct: bool | None = None,
+    plan_correct: bool | None = None,
 ) -> AgentCompletionScore:
     """Score a runtime trace with transparent, bounded heuristics.
 
@@ -73,7 +73,9 @@ def score_trace(
     else:
         recovery = float(recovered_after_failure) if failures else 1.0
     return AgentCompletionScore(
-        intent=float(intent_correct), plan=float(plan_correct), selection=selection,
+        intent=float(intent_correct) if intent_correct is not None else 0.0,
+        plan=float(plan_correct) if plan_correct is not None else 0.0,
+        selection=selection,
         arguments=max(0.0, min(1.0, arguments)), execution=execution,
         observation=float(observed_results), recovery=recovery, final_completion=final,
     )

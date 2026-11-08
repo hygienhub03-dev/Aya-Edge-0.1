@@ -1,0 +1,37 @@
+{
+  "categories": {
+    "agentic": 60,
+    "general_language": 60
+  },
+  "format": "aya-edge-jsonl-manifest",
+  "metadata": {
+    "purpose": "development pipeline fixture unless source registry is independently approved",
+    "source_registry": [
+      "aya_edge_mini_dataset_v1/train.jsonl",
+      "aya_edge_mini_dataset_v1/validation.jsonl",
+      "aya_edge_mini_dataset_v1/test.jsonl"
+    ]
+  },
+  "processing": {
+    "deduplication": "ID and normalized-text SHA-256",
+    "normalization": "unicode-preserving whitespace collapse and NUL removal",
+    "split": {
+      "stratified_by": "category",
+      "test_fraction": 0.1,
+      "validation_fraction": 0.1
+    }
+  },
+  "records": {
+    "accepted": 120,
+    "input": 120,
+    "rejected": 0,
+    "splits": {
+      "test": 12,
+      "train": 96,
+      "validation": 12
+    }
+  },
+  "rejections": [],
+  "seed": 42,
+  "version": 1
+}

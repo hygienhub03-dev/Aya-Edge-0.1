@@ -4,6 +4,7 @@ from aya_edge.evaluation import (
     SchemaValidationError,
     SimulatedRuntime,
     ToolSpec,
+    run_model_in_loop,
     score_trace,
     validate_arguments,
 )
@@ -31,10 +32,16 @@ def test_schema_validation_reports_required_and_extra_fields():
 
 def test_no_tool_case_scores_complete_without_calls():
     trace = SimulatedRuntime([]).run([])
-    score = score_trace(trace, expected_tools=[], expected_state={})
+    score = score_trace(trace, expected_tools=[], expected_state={}, intent_correct=True, plan_correct=True)
     assert score.final_completion == 1.0
     assert score.selection == 1.0
     assert score.geometric_mean() == 1.0
+
+
+def test_unverified_intent_and_plan_receive_no_automatic_credit():
+    trace = SimulatedRuntime([]).run([])
+    score = score_trace(trace, expected_tools=[], expected_state={})
+    assert score.intent == 0.0 and score.plan == 0.0
 
 
 def test_multi_step_state_and_argument_scoring():
@@ -57,6 +64,23 @@ def test_injected_failure_can_be_recovered():
     assert [result.ok for result in trace.results] == [False, True]
     score = score_trace(trace, expected_tools=["set_theme", "set_theme"], expected_state={"theme": "light"}, recovered_after_failure=True)
     assert score.recovery == 1.0 and score.final_completion == 1.0
+
+
+def test_model_in_loop_observes_failure_and_selects_retry_then_completes():
+    runtime = SimulatedRuntime(
+        [ToolSpec("set_theme", schema("theme"), lambda args, state: state.update(theme=args["theme"]))],
+        fail_on_calls={"set_theme": 1},
+    )
+    def policy(observation):
+        if not observation.results:
+            return ToolCallEnvelope("set_theme", {"theme": "light"})
+        if not observation.results[-1].ok:
+            return ToolCallEnvelope("set_theme", {"theme": "light"})
+        return AgentFinalEnvelope("Theme updated")
+    result = run_model_in_loop(policy, runtime, "Set theme to light, retry if needed.")
+    assert result.trace.state == {"theme": "light"}
+    assert [item.ok for item in result.trace.results] == [False, True]
+    assert result.terminal.content == "Theme updated"
 
 
 def test_score_vector_is_bounded_and_complete():

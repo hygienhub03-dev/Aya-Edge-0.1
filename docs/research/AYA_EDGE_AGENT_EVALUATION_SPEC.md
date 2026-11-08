@@ -14,7 +14,7 @@ Tool parameters use a deliberately small schema subset: object properties, requi
 
 ## Scoring methodology
 
-- **Intent:** whether the agent correctly identifies the user’s requested outcome and whether a tool is needed. No-tool tasks receive full intent credit when the expected tool list is empty and the final state remains correct.
+- **Intent:** whether the agent correctly identifies the user’s requested outcome and whether a tool is needed. The implementation gives no automatic intent credit; a rubric or explicit evaluator judgement is required, including for no-tool tasks.
 - **Plan:** whether the intended sequence and dependencies are correct. This may be supplied by a deterministic task rubric or a separately judged plan; it is not inferred from fluent prose.
 - **Selection:** exact ordered tool-sequence match, including the empty sequence for no-tool tasks.
 - **Arguments:** required and normalized argument correctness. A valid schema alone is not sufficient.
@@ -23,7 +23,7 @@ Tool parameters use a deliberately small schema subset: object properties, requi
 - **Recovery:** whether an injected failure is handled by adapting or retrying correctly, without repeated invalid calls. Episodes without failure have full recovery credit by default.
 - **Final completion:** exact final-state match. This is the primary gate: an episode is not complete merely because the model selected the right tool.
 
-`score_trace` supplies transparent runtime-derived values and accepts expected tools, expected arguments, expected state, and optional intent/plan/recovery judgments. For stochastic agents, repeat each episode and report `pass^k` in addition to `pass^1`.
+`run_model_in_loop` lets a policy receive the prompt and prior tool results before selecting each next call, retry, final response, or clarification. `score_trace` supplies transparent runtime-derived values and accepts expected tools, expected arguments, expected state, and optional intent/plan/recovery judgments. Unprovided intent and plan judgements score zero rather than being silently treated as correct. For stochastic agents, repeat each episode and report `pass^k` in addition to `pass^1`.
 
 ## Required case categories
 

@@ -23,6 +23,13 @@ The MoE path currently dispatches with a Python expert loop and `index_add_`. Te
 
 Before any production claim, verify a pinned revision, deterministic checkpoint round-trip, causal correctness, parameter accounting, real training/resume behavior, grouped-dispatch comparison, memory and throughput at target workloads, and held-out language plus agent completion metrics. Tool-call text is not execution; completion requires external verification. No unsupported benchmark claims are made here.
 
+## Review follow-up implemented on the 0.2 branch
+
+- The Kaggle notebook now clones `feature/aya-edge-02-production`, checks out an immutable expected revision, and reads the versioned `datasets/aya_edge_v0_2_dev` fixture rather than the legacy path.
+- `scripts/train.py` now constructs a warmup-plus-cosine scheduler, runs bounded validation when a validation split is available, and saves/restores scheduler state through the checkpoint helper.
+- Agent evaluation now includes `run_model_in_loop`, where an injected policy receives prior tool results and chooses the next tool call, retry, final response, or clarification. Intent and plan dimensions receive zero rather than automatic credit when no explicit judgement is supplied.
+- Regression tests cover the corrected notebook contracts, conservative scoring, iterative recovery, and the new data/training interfaces.
+
 ## Limitations and future work
 
 No report in this set establishes generalization, agent competence, long-context quality, semantic experts, production latency, or legal clearance. Future work must scale the data pipeline with approved sources, add mask-aware attention and KV-cache measurements, benchmark grouped dispatch, implement capacity/overflow telemetry, run the verifier-backed evaluation on held-out data, and complete licensing review for all external and teacher-derived artifacts.

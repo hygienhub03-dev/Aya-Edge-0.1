@@ -46,12 +46,15 @@ class SimulatedRuntime:
     def run(self, calls: list[ToolCallEnvelope]) -> ExecutionTrace:
         if len(calls) > self.max_steps:
             raise ValueError(f"maximum steps exceeded: {self.max_steps}")
-        state = dict(self.initial_state)
-        trace = ExecutionTrace(dict(self.initial_state), state)
-        self._call_counts = {}
+        trace = self.begin()
         for call in calls:
-            trace.events.append(self.execute(call, state))
+            trace.events.append(self.execute(call, trace.state))
         return trace
+
+    def begin(self, initial_state: Mapping[str, Any] | None = None) -> ExecutionTrace:
+        state = dict(self.initial_state if initial_state is None else initial_state)
+        self._call_counts = {}
+        return ExecutionTrace(dict(state), state)
 
     def execute(self, call: ToolCallEnvelope, state: dict[str, Any]) -> dict[str, Any]:
         count = self._call_counts.get(call.tool_name, 0) + 1
