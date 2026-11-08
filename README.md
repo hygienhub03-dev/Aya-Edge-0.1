@@ -62,6 +62,7 @@ Initial distillation teacher: `openbmb/MiniCPM5-1B`. The teacher is dense; this 
 - [Kaggle Tesla T4 training notebook](notebooks/AYA_Edge_T4_Training.ipynb)
 - [AYA Edge 0.2 Kaggle Tesla T4 notebook](notebooks/AYA_Edge_02_T4_Training.ipynb)
 - [AYA Edge 0.2 dual-T4 DDP smoke notebook](notebooks/AYA_Edge_02_Dual_T4_DDP_Smoke.ipynb)
+- [**FineWeb-Edu experimental training notebook**](notebooks/AYA_Edge_02_FineWeb_Edu_Training.ipynb) (streams HuggingFaceFW/fineweb-edu, trains the locked 32k BPE, runs a full 0.2 training loop)
 
 ## Limitations / next steps
 
