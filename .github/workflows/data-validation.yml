@@ -3,8 +3,6 @@ name: Data and repository validation
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: [feature/aya-edge-dataset-acquisition]
   workflow_dispatch:
 
 permissions:
@@ -44,7 +42,7 @@ jobs:
           python-version: "3.11"
       - name: Install test dependencies and CPU PyTorch
         run: |
-          python -m pip install --upgrade pip pytest PyYAML
+          python -m pip install --upgrade pip pytest PyYAML jsonschema
           python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch>=2.1'
           python -m pip install --no-deps -e .
       - name: Run repository test suite
