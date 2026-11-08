@@ -1,4 +1,11 @@
-"""One-step, synthetic-data DDP infrastructure smoke test for AYA Edge 0.2."""
+"""One-step, synthetic-data DDP infrastructure smoke test for AYA Edge 0.2.
+
+When a non-production tokenizer artifact is present at
+``artifacts/tokenizer_nonprod.json`` the smoke test loads it, asserts the
+locked ID layout (0–15 specials / 16–271 byte fallback / 272–32767 BPE),
+and verifies model/tokenizer alignment. Synthetic input IDs are always
+drawn from the full production range 0…32767.
+"""
 from __future__ import annotations
 
 import json
@@ -14,8 +21,8 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from aya_edge import AyaEdgeConfig, AyaEdgeForCausalLM, count_active_parameters, count_parameters
 
 MODEL_VOCAB_SIZE = 32768
-DEVELOPMENT_TOKENIZER_VOCAB_SIZE = 268
 SEQUENCE_LENGTH = 64
+NONPROD_TOKENIZER_PATH = Path("artifacts/tokenizer_nonprod.json")
 
 
 def main() -> None:
@@ -34,12 +41,26 @@ def main() -> None:
         cfg = AyaEdgeConfig(**raw_config["model"])
         if cfg.vocab_size != MODEL_VOCAB_SIZE:
             raise RuntimeError("model vocabulary changed; update this smoke-test contract")
+
+        tokenizer_loaded = False
+        tokenizer_path = None
+        if NONPROD_TOKENIZER_PATH.exists():
+            from aya_edge.tokenizer import ProductionBPETokenizer
+            tok = ProductionBPETokenizer.load(NONPROD_TOKENIZER_PATH)
+            tok.assert_model_alignment(cfg)
+            tokenizer_loaded = True
+            tokenizer_path = str(NONPROD_TOKENIZER_PATH)
+            if rank == 0:
+                print(f"Loaded NON-PRODUCTION tokenizer from {tokenizer_path} (vocab={tok.vocab_size})")
+
         torch.manual_seed(42 + rank)
         model = AyaEdgeForCausalLM(cfg).to(device)
         ddp_model = DDP(model, device_ids=[local_rank], find_unused_parameters=True)
         optimizer = torch.optim.AdamW(ddp_model.parameters(), lr=2e-4)
         scaler = torch.amp.GradScaler("cuda", enabled=True)
-        input_ids = torch.randint(0, DEVELOPMENT_TOKENIZER_VOCAB_SIZE, (1, SEQUENCE_LENGTH), device=device)
+
+        # Full production vocabulary range (0 … 32767)
+        input_ids = torch.randint(0, MODEL_VOCAB_SIZE, (1, SEQUENCE_LENGTH), device=device)
         before = ddp_model.module.embed.weight.detach()[0, :8].clone()
         start = time.time()
         with torch.amp.autocast("cuda", dtype=torch.float16):
@@ -67,8 +88,10 @@ def main() -> None:
                 "step": 1,
                 "config": cfg.to_dict(),
                 "purpose": "synthetic DDP smoke test only",
-                "tokenizer_vocab_size": DEVELOPMENT_TOKENIZER_VOCAB_SIZE,
+                "tokenizer_vocab_size": MODEL_VOCAB_SIZE,
                 "model_vocab_size": cfg.vocab_size,
+                "tokenizer_loaded": tokenizer_loaded,
+                "tokenizer_path": tokenizer_path,
             }, checkpoint)
             metrics = {
                 "status": "PASSED",
@@ -82,8 +105,11 @@ def main() -> None:
                 "embedding_weights_changed": bool(changed),
                 "elapsed_seconds_rank0": elapsed,
                 "checkpoint": str(checkpoint),
-                "training_data": "synthetic token IDs; no external corpus",
+                "training_data": "synthetic token IDs drawn from full 0..32767 production range",
                 "production_training_allowed": False,
+                "tokenizer_loaded": tokenizer_loaded,
+                "tokenizer_path": tokenizer_path,
+                "id_layout": "0-15 specials / 16-271 byte fallback / 272-32767 BPE",
             }
             (output_dir / "metrics.json").write_text(json.dumps(metrics, indent=2) + "\n", encoding="utf-8")
             print("DDP_SMOKE_METRICS=" + json.dumps(metrics))
