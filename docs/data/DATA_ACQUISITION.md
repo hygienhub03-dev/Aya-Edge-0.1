@@ -26,7 +26,7 @@ The maximum Stage 1 record caps total 550 across candidates if every one were la
 
 The intended training mixture is 50% general text/knowledge and 50% agentic/instruction/tool-use **by tokenizer token count**, not by row count. `configs/data/mixture.yaml` groups `general` separately from `instruction`, `agent`, and `tool_use`, uses a deterministic seed, and reports both target and actual token shares and deviations. The 50/50 report cannot be populated until an approved dataset is acquired.
 
-The current pilot tokenizer ID `aya-edge-dev-byte-v1` counts UTF-8 bytes as token IDs. This provides deterministic development accounting only. It is not the production tokenizer. PR #2’s 0.2 model config sets `vocab_size: 32768`, while its byte-level tokenizer has 268 total token IDs (256 byte IDs plus special tokens); the audited stable-main scaffold reports 32,000. This mismatch blocks any 0.2 production token-count report or training run until the model/tokenizer contracts are reconciled. See `TOKENIZER_AUDIT.md`.
+The current pilot tokenizer ID `aya-edge-dev-byte-v1` counts UTF-8 bytes as token IDs. This provides deterministic development accounting only. The production path is `aya-edge-production-bpe-v1`, which requires a local, pinned 32,768-entry tokenizer JSON with the fixed special-token IDs documented in `docs/research/AYA_EDGE_PRODUCTION_TOKENIZER_SPEC.md`. Until corpus approval produces that artifact and manifest, the 268-ID byte adapter cannot satisfy 0.2 production token accounting or training. See `TOKENIZER_AUDIT.md`.
 
 ## Kaggle T4 reproducibility
 
