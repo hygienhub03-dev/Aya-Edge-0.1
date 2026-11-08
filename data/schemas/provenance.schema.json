@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aya-edge.local/schemas/provenance.schema.json",
+  "title": "AYA Edge data provenance",
+  "type": "object",
+  "required": ["original_record_id", "source_split", "synthetic", "transformation_version"],
+  "properties": {
+    "original_record_id": {"type": "string", "minLength": 1},
+    "source_split": {"type": "string", "minLength": 1},
+    "synthetic": {"type": "boolean"},
+    "transformation_version": {"type": "string", "minLength": 1},
+    "source_file": {"type": "string"},
+    "source_checksum": {"type": "string"},
+    "upstream_source": {"type": "string"},
+    "subset_id": {"type": "string"},
+    "acquired_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,21 @@
+schema_version: 1
+# Filters apply only after provenance has been attached; every rejection is logged.
+minimum_characters: 12
+minimum_words: 3
+maximum_characters: 200000
+repeated_template_flag_threshold: 5
+near_duplicate_action: flag_only
+near_duplicate_similarity_threshold: 0.98
+remove_boilerplate: false
+supported_modalities:
+  - text
+structured_json_validation: when_source_schema_is_present
+reject_truncated_tool_trajectories: true
+reject_missing_tool_results: true
+reject_high_confidence_sensitive_identifiers: true
+include_rejected_raw: false
+manual_privacy_review_required: true
+privacy_check_limitations: >-
+  Regex checks detect common emails, phone numbers, SSNs, payment-card-like numbers, and exposed API credentials.
+  They are not a comprehensive PII detector; names, addresses, private facts, and contextual sensitivity require review.
+preserve_raw_record: true

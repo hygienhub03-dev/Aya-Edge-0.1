@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aya-edge.local/schemas/canonical_tool_call.schema.json",
+  "title": "AYA Edge canonical tool call",
+  "type": "object",
+  "required": ["call_id", "source_id", "source_revision", "license_id", "tool_name", "arguments", "sequence_index", "provenance"],
+  "properties": {
+    "call_id": {"type": "string", "minLength": 1},
+    "source_id": {"type": "string", "minLength": 1},
+    "source_revision": {"type": "string", "pattern": "^([0-9a-f]{40}|[0-9]{8})$"},
+    "license_id": {"type": "string", "minLength": 1},
+    "call_id_origin": {"enum": ["source", "derived_from_trajectory_order"]},
+    "source_call_id": {"type": "string"},
+    "tool_name": {"type": "string", "minLength": 1},
+    "arguments": {"type": "object"},
+    "result": {},
+    "status": {"enum": ["success", "error", "unknown"]},
+    "sequence_index": {"type": "integer", "minimum": 0},
+    "provenance": {"$ref": "provenance.schema.json"},
+    "raw_call": {"type": "object"},
+    "raw_result": {}
+  },
+  "additionalProperties": false
+}

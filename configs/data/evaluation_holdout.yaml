@@ -1,0 +1,11 @@
+schema_version: 1
+protected_source_ids:
+  - bfcl
+  - nemotron_rl_conversational_pivot
+  - nemotron_rl_function_calling_pivot
+purpose: held_out_evaluation_or_later_rl_only
+training_exclusion_policy:
+  - Never acquire BFCL evaluation/test examples into Stage 1 training.
+  - Keep both Nemotron RL pivot datasets out of Stage 1 supervised/pretraining mixtures.
+  - Keep complete evaluation splits isolated and group duplicates before splitting.
+  - If benchmark test records cannot be inspected, report that contamination could not be ruled out.
