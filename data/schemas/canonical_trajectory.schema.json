@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aya-edge.local/schemas/canonical_trajectory.schema.json",
+  "title": "AYA Edge canonical tool-use trajectory",
+  "type": "object",
+  "required": ["trajectory_id", "source_id", "source_revision", "license_id", "events", "provenance"],
+  "properties": {
+    "trajectory_id": {"type": "string", "minLength": 1},
+    "source_id": {"type": "string", "minLength": 1},
+    "source_revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "license_id": {"type": "string", "minLength": 1},
+    "category": {"const": "tool_use"},
+    "events": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["sequence_index", "event_type"],
+        "properties": {
+          "sequence_index": {"type": "integer", "minimum": 0},
+          "event_type": {"enum": ["user_goal", "assistant_decision", "tool_call", "tool_result", "final_answer", "failure"]},
+          "content": {"type": ["string", "object", "array", "null"]},
+          "tool_name": {"type": "string"},
+          "arguments": {"type": "object"},
+          "call_id": {"type": "string"},
+          "status": {"type": "string"},
+          "raw_event": {}
+        },
+        "additionalProperties": true
+      }
+    },
+    "provenance": {"$ref": "provenance.schema.json"},
+    "raw_record": {"type": "object"}
+  },
+  "additionalProperties": false
+}

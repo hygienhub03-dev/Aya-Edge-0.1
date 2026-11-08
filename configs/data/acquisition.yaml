@@ -1,0 +1,87 @@
+schema_version: 1
+source_registry: configs/data/source_registry.yaml
+stage: pilot
+cache_dir: ${HF_HOME}
+storage:
+  raw_root: ${AYA_DATA_ROOT}/raw
+  processed_root: ${AYA_DATA_ROOT}/processed
+  resume: true
+  checksum_algorithm: sha256
+  max_materialized_records_per_source: 250
+  streaming: true
+# Every candidate is disabled until its registry approval_status becomes approved
+# or approved_with_conditions. The downloader checks the registry before fetching.
+sources:
+  - source_id: fineweb
+    enabled: false
+    stage: stage1
+    revision: 9bb295ddab0e05d785b879661af7260fed5140fc
+    configuration: sample-10BT
+    split: train
+    max_records: 100
+    note: Small streamed record pilot only; blocked pending page-rights review.
+  - source_id: nemotron_agentic_interactive
+    enabled: false
+    stage: stage1
+    revision: 650d590978ca35c8f1ecea2faf136e5fac421b62
+    configuration: default
+    split: interactive_agent
+    max_records: 50
+    note: Blocked pending Glaive component mapping and nested schema review.
+  - source_id: nemotron_agentic_tool_calling
+    enabled: false
+    stage: stage1
+    revision: 650d590978ca35c8f1ecea2faf136e5fac421b62
+    configuration: default
+    split: tool_calling
+    max_records: 100
+    note: Blocked pending component-license and tool-source lineage review.
+  - source_id: nemotron_instruction_chat_if
+    enabled: false
+    stage: stage1
+    revision: 83dcd3aded0d289b0bbc018d3f9af4c5dd4005df
+    configuration: default
+    split: chat_if
+    max_records: 100
+    note: Separate ODC-By subset; blocked pending upstream license lineage review.
+  - source_id: nemotron_instruction_structured_outputs
+    enabled: false
+    stage: stage1
+    revision: 83dcd3aded0d289b0bbc018d3f9af4c5dd4005df
+    configuration: default
+    split: structured_outputs
+    max_records: 100
+    note: Separate CC BY 4.0 subset; blocked pending upstream license/model-term review.
+  - source_id: wikimedia_enwiki
+    enabled: false
+    stage: stage1
+    revision: '20261001'
+    configuration: enwiki pages-articles text-only candidate
+    split: pages-articles
+    max_records: 100
+    acquisition_method: manual_snapshot_pending_parser
+    note: Do not download until page-level rights, attribution, namespace, and dump-parser gates pass.
+  - source_id: nemotron_rl_conversational_pivot
+    enabled: false
+    stage: later_rl
+    revision: bfc7a4dd55ec1424cc3761ceacdd85a5743b4f4e
+    configuration: default
+    split: train
+    max_records: 100
+    note: Research/configuration only; never Stage 1.
+  - source_id: nemotron_rl_function_pivot
+    enabled: false
+    stage: later_rl
+    revision: 0ac34ec81bb6976d3746407df306a57ce48f0bd8
+    configuration: default
+    split: train
+    max_records: 100
+    note: Research/configuration only; never Stage 1.
+  - source_id: bfcl_v4
+    enabled: false
+    stage: evaluation_only
+    revision: f7cf7359b7ac615a0b294831c5ba2bc95ee4a000
+    configuration: BFCL_v4
+    split: evaluation_only
+    max_records: 0
+    note: Held out for evaluation; payload is never acquired into the training pipeline.

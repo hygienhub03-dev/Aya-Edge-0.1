@@ -1,0 +1,23 @@
+schema_version: 1
+seed: 42
+# 0 means use the available Stage 1 training window and report its actual size.
+target_tokens_per_window: 0
+category_targets:
+  general: 0.5
+  agent: 0.5
+category_members:
+  general:
+    - general
+  agent:
+    - instruction
+    - agent
+    - tool_use
+tokenizer:
+  id: aya-edge-dev-byte-v1
+  source: PR #2 development tokenizer behavior; byte IDs over UTF-8
+  production_required: false
+  production_compatible: false
+  warning: >-
+    This explicit development byte-token count is not equivalent to the eventual
+    production tokenizer. Stage 1 production use remains blocked until the
+    tokenizer is pinned and its vocabulary matches the selected 0.2 model.
