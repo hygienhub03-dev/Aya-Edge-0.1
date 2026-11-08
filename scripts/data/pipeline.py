@@ -768,6 +768,7 @@ class TokenCounter:
         if tokenizer_id == "aya-edge-dev-byte-v1":
             self.kind = "utf8_byte_ids"
         elif tokenizer_id in {"tokenizers-json", "aya-edge-production-bpe-v1"}:
+        elif tokenizer_id == "tokenizers-json":
             if not tokenizer_path:
                 raise PipelineError("--tokenizer-path is required for tokenizers-json")
             try:
@@ -792,6 +793,9 @@ class TokenCounter:
             self.kind = "production_bpe"
         else:
             raise PipelineError("Tokenizer must be explicitly selected as aya-edge-dev-byte-v1 or aya-edge-production-bpe-v1 with a pinned local tokenizer file")
+            self.kind = "tokenizers_json"
+        else:
+            raise PipelineError("Tokenizer must be explicitly selected as aya-edge-dev-byte-v1 or tokenizers-json with a pinned local tokenizer file")
 
     def count(self, text: str) -> int:
         if self.kind == "utf8_byte_ids":
