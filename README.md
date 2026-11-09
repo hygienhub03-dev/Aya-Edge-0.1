@@ -54,6 +54,7 @@ Initial distillation teacher: `openbmb/MiniCPM5-1B`. The teacher is dense; this 
 - [MoE routing report](docs/research/AYA_EDGE_MOE_ROUTING_REPORT.md)
 - [Agent evaluation specification](docs/research/AYA_EDGE_AGENT_EVALUATION_SPEC.md)
 - [Training pipeline](docs/research/AYA_EDGE_TRAINING_PIPELINE.md)
+- [Agent SFT implementation, tool validation, and loss masking](docs/research/AYA_EDGE_AGENT_SFT_IMPLEMENTATION.md)
 - [0.2 implementation report](docs/research/AYA_EDGE_02_IMPLEMENTATION_REPORT.md)
 - [Dataset preparation instructions](datasets/README.md)
 - [Stage 0](docs/stage-0/README.md) · [Stage 1](docs/stage-1/README.md) · [Stage 2](docs/stage-2/README.md) · [Stage 3](docs/stage-3/README.md)
@@ -72,4 +73,5 @@ Initial distillation teacher: `openbmb/MiniCPM5-1B`. The teacher is dense; this 
 - The Kaggle notebook is a reproducible smoke-test/prototype harness; it has not been claimed as successfully executed on Kaggle until run there.
 - The 0.2 training script is a resumable pipeline scaffold; the byte tokenizer and small fixtures are development adapters, not the approved production corpus/tokenizer.
 - The production BPE trainer is approval-gated. `scripts/prepare_language_corpus.py` can collect a bounded FineWeb-Edu slice after the live ODC-By check; no production tokenizer checksum is valid until that command and `scripts/train_bpe_tokenizer.py` have been run.
+- Agent SFT is available through `scripts/kaggle_preflight.py` and `scripts/train_agent_sft.py`; preflight validates JSON-schema tool arguments, call/result pairing, tokenizer/model alignment, and assistant-only target masks before training.
 - Unit tests are provided but must be run in the target environment.
