@@ -140,6 +140,7 @@ def main() -> None:
                     "split": split_for_id(row["uuid"]),
                 }
                 handles[record["split"]].write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
+                seen_uuids.add(identifier)
                 counts[record["split"]] += 1
                 accepted_by_subset[subset] += 1
             if accepted_by_subset[subset] < quota:
