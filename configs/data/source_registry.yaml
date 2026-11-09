@@ -379,3 +379,91 @@ sources:
       - https://github.com/ShishirPatil/gorilla/blob/f7cf7359b7ac615a0b294831c5ba2bc95ee4a000/LICENSE
       - https://github.com/ShishirPatil/gorilla/blob/f7cf7359b7ac615a0b294831c5ba2bc95ee4a000/berkeley-function-call-leaderboard/bfcl_eval/data/README.md
     use_class: held_out
+
+  - source_id: fineweb_edu
+    dataset_name: FineWeb-Edu
+    repository: HuggingFaceFW/fineweb-edu
+    revision: resolve_at_acquisition
+    revision_kind: resolved_hub_commit_at_acquisition
+    configuration: sample-10BT
+    split: train
+    source_url: https://huggingface.co/datasets/HuggingFaceFW/fineweb-edu
+    license_name: ODC-By 1.0 plus Common Crawl Terms of Use
+    license_url: https://opendatacommons.org/licenses/by/1-0/
+    license_verified: true
+    commercial_use: Dataset/database rights permit commercial use subject to ODC-By and Common Crawl terms; individual page rights are not comprehensively cleared.
+    redistribution: Conditional on ODC-By attribution/notices for the database and separate rights in each underlying page.
+    attribution_required: true
+    share_alike: false
+    additional_restrictions:
+      - Common Crawl terms defer to source-owner rights and users must assess content legality.
+      - ODC-By does not grant independent rights in webpage contents.
+      - No comprehensive per-row content license manifest is published.
+      - This approval is limited to a bounded local personal-research slice; it is not blanket clearance for commercial use or redistribution.
+    upstream_sources:
+      - Common Crawl web pages
+      - FineWeb-Edu educational-content filtering and deduplication pipeline
+    synthetic_or_human: human-authored web content; not documented as synthetic
+    known_limitations:
+      - Individual source-page copyright, privacy, and publicity rights are not cleared document by document.
+      - The exact Hub revision is resolved at acquisition and must be recorded in the resulting manifest.
+    approval_status: approved_with_conditions
+    review_notes: >-
+      Conditional engineering approval for a bounded local personal-research slice only, after the operator
+      explicitly acknowledges Common Crawl terms and residual page-level rights risk. Do not treat this as
+      legal advice or blanket permission for commercial deployment, redistribution, or release.
+    review_evidence:
+      - https://huggingface.co/datasets/HuggingFaceFW/fineweb-edu
+      - https://commoncrawl.org/terms-of-use
+      - https://opendatacommons.org/licenses/by/1-0/
+    use_class: stage1_bounded_personal_research
+    normalizer:
+      kind: document
+      text_field: text
+      title_field: url
+      id_field: id
+
+  - source_id: ultradata_sft_agent_2609
+    dataset_name: UltraData-SFT-Agent-2609
+    repository: openbmb/UltraData-SFT-Agent-2609
+    revision: f684cc1
+    revision_kind: huggingface_commit
+    configuration: Tool-Use;Search-Agent;General-Agent
+    split: train
+    source_url: https://huggingface.co/datasets/openbmb/UltraData-SFT-Agent-2609
+    license_name: Apache-2.0 dataset declaration plus applicable upstream licenses
+    license_url: https://www.apache.org/licenses/LICENSE-2.0
+    license_verified: true
+    commercial_use: Apache-2.0 permits commercial use of covered project materials; upstream records may carry separate terms and are not comprehensively mapped.
+    redistribution: No unchanged reposting, mirroring, re-hosting, or repackaging of dataset artifacts without prior written permission; upstream rights also apply.
+    attribution_required: true
+    share_alike: false
+    additional_restrictions:
+      - Dataset card says upstream dataset, public repository, web, and model-generated sources are aggregated; each upstream license continues to apply.
+      - Publicly accessible course pages are not automatically cleared for training or redistribution.
+      - No comprehensive per-record upstream rights manifest is published.
+      - Bounded local personal-research SFT pilot only; no raw dataset redistribution.
+    upstream_sources:
+      - Public datasets and repositories
+      - Web content and course pages
+      - Model-generated agent trajectories
+    synthetic_or_human: mixed upstream content and model-generated trajectories
+    known_limitations:
+      - Static trajectories only; tools, environments, and tests are not included.
+      - Failure and recovery traces are retained and are not all successful demonstrations.
+      - Frozen tool definitions may describe virtual APIs unavailable in AYA's runtime.
+    approval_status: approved_with_conditions
+    review_notes: >-
+      Conditional engineering approval for a small local personal-research SFT pilot only, after explicit
+      acknowledgement of upstream terms and residual item-level rights risk. The data preparation script
+      filters English-oriented subsets and records the resolved Hub revision; it does not grant blanket
+      commercial, redistribution, or release rights.
+    review_evidence:
+      - https://huggingface.co/datasets/openbmb/UltraData-SFT-Agent-2609
+      - https://www.apache.org/licenses/LICENSE-2.0
+    use_class: stage2_bounded_personal_research_agent_sft
+    normalizer:
+      kind: trajectory
+      messages_field: messages
+      tools_field: tools
+      category: agent
