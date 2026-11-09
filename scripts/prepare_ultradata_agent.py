@@ -95,13 +95,14 @@ def main() -> None:
         raise SystemExit("character and candidate limits must be positive")
 
     try:
-        from datasets import load_dataset
-        from huggingface_hub import dataset_info
+        from huggingface_hub import HfApi, HfFileSystem, dataset_info
     except ImportError as exc:
         raise SystemExit("install data extras: python -m pip install -e '.[data]'") from exc
 
     info = dataset_info(DATASET, revision=args.revision)
     resolved_revision = info.sha
+    files = HfApi().list_repo_files(repo_id=DATASET, repo_type="dataset", revision=resolved_revision)
+    filesystem = HfFileSystem()
     output = args.output_dir
     output.mkdir(parents=True, exist_ok=True)
     handles = {name: (output / f"{name}.jsonl").open("w", encoding="utf-8") for name in ("train", "validation", "test")}
@@ -114,7 +115,26 @@ def main() -> None:
         for subset, quota in quotas.items():
             if quota == 0:
                 continue
-            stream = load_dataset(DATASET, subset, split="train", revision=resolved_revision, streaming=True)
+            prefix = f"data/{subset.replace('-', '_')}/"
+            shard_paths = sorted(
+                path for path in files if path.startswith(prefix) and path.endswith(".jsonl")
+            )
+            if not shard_paths:
+                raise RuntimeError(f"{subset}: no JSONL shards found under {prefix}")
+
+            def stream_rows():
+                for shard_path in shard_paths:
+                    uri = f"hf://datasets/{DATASET}@{resolved_revision}/{shard_path}"
+                    with filesystem.open(uri, "rt", encoding="utf-8") as handle:
+                        for line_number, line in enumerate(handle, 1):
+                            if not line.strip():
+                                continue
+                            try:
+                                yield json.loads(line)
+                            except json.JSONDecodeError as exc:
+                                raise RuntimeError(f"invalid JSON in {shard_path}:{line_number}") from exc
+
+            stream = stream_rows()
             scanned = 0
             for row in stream:
                 scanned += 1
