@@ -7,6 +7,7 @@ from .envelopes import (
     ToolCallEnvelope,
     ToolResultEnvelope,
 )
+from .trajectory import TRAJECTORY_SCHEMA, validate_trajectory
 
 __all__ = [
     "AgentClarificationEnvelope",
@@ -14,4 +15,6 @@ __all__ = [
     "Envelope",
     "ToolCallEnvelope",
     "ToolResultEnvelope",
+    "TRAJECTORY_SCHEMA",
+    "validate_trajectory",
 ]

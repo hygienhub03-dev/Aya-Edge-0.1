@@ -1,3 +1,8 @@
+"""Train AYA Edge. A 32,768-vocabulary configuration requires the production tokenizer."""
+from aya_edge.training.language import main
+
+if __name__ == "__main__":
+    main()
 """Run a resumable AYA Edge experiment.
 
 Dry-run is safe for architecture inspection and uses the development byte

@@ -11,6 +11,8 @@ checkpoints/
 data/raw/
 data/cache/
 data/processed/**/*.jsonl
+datasets/**/*.jsonl
+artifacts/
 data/processed/**/*.parquet
 data/processed/**/*.arrow
 data/processed/**/*.bin

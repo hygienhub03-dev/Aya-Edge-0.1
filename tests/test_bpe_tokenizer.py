@@ -43,3 +43,25 @@ def test_training_requires_optional_dependency_or_enough_corpus(tmp_path):
     else:
         with pytest.raises(ValueError, match="expected vocabulary size"):
             train_production_bpe([corpus], tmp_path / "tokenizer.json")
+
+
+def test_jsonl_training_uses_text_field_and_locks_byte_ids(tmp_path):
+    pytest.importorskip("tokenizers")
+    from tokenizers.pre_tokenizers import ByteLevel
+
+    from aya_edge.tokenizer.bpe import train_byte_level_bpe
+
+    corpus = tmp_path / "corpus.jsonl"
+    corpus.write_text(
+        json.dumps({"text": "café 你好 — the quick brown fox jumps over the lazy dog " * 20}) + "\n",
+        encoding="utf-8",
+    )
+    tokenizer = train_byte_level_bpe([corpus], tmp_path / "layout.json", vocab_size=272, min_frequency=2)
+    assert tokenizer.vocab_size == 272
+    assert tokenizer.encode("category")
+    roundtrip = tokenizer.decode(tokenizer.encode("café 你好"))
+    assert roundtrip == "café 你好"
+    alphabet = list(ByteLevel.alphabet())
+    vocab = tokenizer._backend.get_vocab()
+    assert [vocab[token] for token in alphabet] == list(range(16, 272))
+    assert "category" not in vocab or vocab["category"] >= 272

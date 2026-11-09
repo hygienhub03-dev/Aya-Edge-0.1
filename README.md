@@ -63,6 +63,7 @@ Initial distillation teacher: `openbmb/MiniCPM5-1B`. The teacher is dense; this 
 - [AYA Edge 0.2 Kaggle Tesla T4 notebook](notebooks/AYA_Edge_02_T4_Training.ipynb)
 - [AYA Edge 0.2 dual-T4 DDP smoke notebook](notebooks/AYA_Edge_02_Dual_T4_DDP_Smoke.ipynb)
 - [**FineWeb-Edu experimental training notebook**](notebooks/AYA_Edge_02_FineWeb_Edu_Training.ipynb) (streams HuggingFaceFW/fineweb-edu, trains the locked 32k BPE, runs a full 0.2 training loop)
+- [**First real-training Kaggle notebook**](notebooks/AYA_Edge_02_First_Real_Training.ipynb) (requires an attached approved corpus and validated production tokenizer; supports resumption)
 
 ## Limitations / next steps
 
@@ -70,5 +71,5 @@ Initial distillation teacher: `openbmb/MiniCPM5-1B`. The teacher is dense; this 
 - Router dispatch is a simple prototype implementation, not an optimised sparse kernel.
 - The Kaggle notebook is a reproducible smoke-test/prototype harness; it has not been claimed as successfully executed on Kaggle until run there.
 - The 0.2 training script is a resumable pipeline scaffold; the byte tokenizer and small fixtures are development adapters, not the approved production corpus/tokenizer.
-- The production BPE trainer is approval-gated; no production tokenizer artifact or checksum is included until the corpus is cleared.
+- The production BPE trainer is approval-gated. `scripts/prepare_language_corpus.py` can collect a bounded FineWeb-Edu slice after the live ODC-By check; no production tokenizer checksum is valid until that command and `scripts/train_bpe_tokenizer.py` have been run.
 - Unit tests are provided but must be run in the target environment.

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AYA Edge Observable Agent Trajectory",
+  "type": "object",
+  "required": ["task", "context", "steps", "final_response", "success"],
+  "properties": {
+    "task": {"type": "string", "minLength": 1},
+    "context": {"type": "object"},
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["rationale", "tool", "arguments", "result"],
+        "properties": {
+          "rationale": {"type": "string", "minLength": 1, "description": "Concise observable action justification; never private chain-of-thought."},
+          "tool": {"type": "string", "minLength": 1},
+          "arguments": {"type": "object"},
+          "result": {"type": "object", "required": ["ok"], "properties": {"ok": {"type": "boolean"}, "output": {}, "error": {"type": "string"}}},
+          "recovery": {"type": "string", "minLength": 1},
+          "verification": {"type": "object", "required": ["passed", "evidence"], "properties": {"passed": {"type": "boolean"}, "evidence": {"type": "string", "minLength": 1}}}
+        },
+        "additionalProperties": false
+      }
+    },
+    "final_response": {"type": "string", "minLength": 1},
+    "success": {"type": "boolean"}
+  },
+  "additionalProperties": false
+}

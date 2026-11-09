@@ -53,6 +53,45 @@ def _require_tokenizers():
     return Tokenizer, ByteLevelDecoder, BPE, ByteLevel, BpeTrainer
 
 
+def byte_fallback_alphabet() -> list[str]:
+    """Return the 256-character ByteLevel alphabet in trainer insertion order."""
+    _, _, _, ByteLevel, _ = _require_tokenizers()
+    alphabet = list(ByteLevel.alphabet())
+    if len(alphabet) != 256 or len(set(alphabet)) != 256:
+        raise RuntimeError("ByteLevel.alphabet() must contain 256 distinct characters")
+    return alphabet
+
+
+def iter_corpus_texts(files: Sequence[str | Path]) -> Iterable[str]:
+    """Yield document text. JSONL contributes the ``text`` field, not the raw row."""
+    found = False
+    for path in files:
+        source = Path(path)
+        with source.open(encoding="utf-8") as handle:
+            if source.suffix.lower() == ".jsonl":
+                for line_number, line in enumerate(handle, 1):
+                    if not line.strip():
+                        continue
+                    try:
+                        row = json.loads(line)
+                    except json.JSONDecodeError as exc:
+                        raise ValueError(f"invalid JSON at {source}:{line_number}") from exc
+                    if not isinstance(row, dict):
+                        raise TypeError(f"expected object at {source}:{line_number}")
+                    text = row.get("text")
+                    if not isinstance(text, str) or not text.strip():
+                        raise ValueError(f"{source}:{line_number} is missing non-empty text")
+                    found = True
+                    yield text
+            else:
+                for line in handle:
+                    if line.strip():
+                        found = True
+                        yield line
+    if not found:
+        raise ValueError("corpus files contain no training text")
+
+
 def sha256_file(path: str | Path) -> str:
     digest = hashlib.sha256()
     with Path(path).open("rb") as handle:
@@ -71,6 +110,7 @@ class ProductionTokenizerManifest:
     tokenizers_version: str
     vocab_size: int
     special_tokens: tuple[str, ...]
+    min_frequency: int = 2
 
     def __post_init__(self) -> None:
         if self.format != "aya-edge-production-bpe":
@@ -81,6 +121,8 @@ class ProductionTokenizerManifest:
             raise ValueError("production tokenizer vocabulary must be exactly 32768")
         if tuple(self.special_tokens) != SPECIAL_TOKENS:
             raise ValueError("production special-token contract changed")
+        if not isinstance(self.min_frequency, int) or isinstance(self.min_frequency, bool) or self.min_frequency < 1:
+            raise ValueError("min_frequency must be a positive integer")
         for name, value in (("tokenizer_sha256", self.tokenizer_sha256), ("corpus_manifest_sha256", self.corpus_manifest_sha256), ("implementation_commit", self.implementation_commit), ("tokenizers_version", self.tokenizers_version)):
             if not value or value.startswith("TODO") or value.startswith("PENDING"):
                 raise ValueError(f"{name} must be a real pinned value")
@@ -96,6 +138,10 @@ class ProductionTokenizerManifest:
             "vocab_size": self.vocab_size,
             "special_tokens": list(self.special_tokens),
             "special_token_ids": dict(SPECIAL_TOKEN_IDS),
+            "min_frequency": self.min_frequency,
+            "normalization": "none",
+            "pretokenizer": "ByteLevel(add_prefix_space=False)",
+            "byte_fallback_verified": True,
             "id_layout": {
                 "specials": "0-15",
                 "byte_fallback": "16-271",
@@ -104,12 +150,47 @@ class ProductionTokenizerManifest:
         }
 
 
+def assert_locked_id_layout(backend, *, expected_size: int) -> None:
+    """Require specials at 0–15 and the ByteLevel alphabet at 16–271, in order."""
+    size = backend.get_vocab_size(with_added_tokens=True)
+    if size != expected_size:
+        raise ValueError(
+            f"expected vocabulary size {expected_size}, got {size}; "
+            "the corpus did not contain enough repeated text to fill the vocabulary"
+        )
+    if expected_size < BPE_START or expected_size > PRODUCTION_VOCAB_SIZE:
+        raise ValueError(f"vocab_size must be between {BPE_START} and {PRODUCTION_VOCAB_SIZE}")
+    vocab = backend.get_vocab()
+    for token, expected_id in SPECIAL_TOKEN_IDS.items():
+        actual = vocab.get(token)
+        if actual != expected_id:
+            raise ValueError(f"special token {token} must have ID {expected_id}, got {actual}")
+    alphabet = byte_fallback_alphabet()
+    for offset, token in enumerate(alphabet):
+        expected_id = BYTE_FALLBACK_START + offset
+        actual = vocab.get(token)
+        if actual != expected_id:
+            raise ValueError(
+                f"byte-fallback token {offset} must occupy ID {expected_id}, got {actual}"
+            )
+    for token, token_id in vocab.items():
+        if token in SPECIAL_TOKEN_IDS and token_id >= BYTE_FALLBACK_START:
+            raise ValueError(f"special token {token} must not occupy ID {token_id}")
+
+
 class ProductionBPETokenizer:
     """Validated wrapper around a trained byte-level BPE tokenizer JSON."""
 
-    def __init__(self, backend, *, artifact_path: str | Path | None = None) -> None:
+    def __init__(
+        self,
+        backend,
+        *,
+        artifact_path: str | Path | None = None,
+        expected_vocab_size: int = PRODUCTION_VOCAB_SIZE,
+    ) -> None:
         self._backend = backend
         self.artifact_path = Path(artifact_path) if artifact_path is not None else None
+        self._expected_vocab_size = expected_vocab_size
         self._validate_contract()
 
     @property
@@ -117,28 +198,9 @@ class ProductionBPETokenizer:
         return self._backend.get_vocab_size(with_added_tokens=True)
 
     def _validate_contract(self) -> None:
-        if self.vocab_size != PRODUCTION_VOCAB_SIZE:
+        assert_locked_id_layout(self._backend, expected_size=self._expected_vocab_size)
+        if self._expected_vocab_size == PRODUCTION_VOCAB_SIZE and self.vocab_size != PRODUCTION_VOCAB_SIZE:
             raise ValueError(f"expected vocabulary size {PRODUCTION_VOCAB_SIZE}, got {self.vocab_size}")
-        vocab = self._backend.get_vocab()
-        # 1. Special tokens must occupy exactly IDs 0-15
-        for token, expected_id in SPECIAL_TOKEN_IDS.items():
-            actual = vocab.get(token)
-            if actual != expected_id:
-                raise ValueError(f"special token {token} must have ID {expected_id}, got {actual}")
-        # 2. Invert to inspect ID occupancy
-        id_to_token = {tid: tok for tok, tid in vocab.items()}
-        # 3. Every ID in the byte-fallback block must be occupied (guarantees 256 fallback tokens)
-        missing = [i for i in range(BYTE_FALLBACK_START, BYTE_FALLBACK_END + 1) if i not in id_to_token]
-        if missing:
-            raise ValueError(
-                f"byte-fallback block 16-271 incomplete; missing IDs {missing[:8]}{"..." if len(missing) > 8 else ""} "
-                f"(expected 256 ByteLevel alphabet tokens)"
-            )
-        # 4. No special token may appear outside 0-15
-        for token, tid in vocab.items():
-            if token in SPECIAL_TOKEN_IDS and tid >= BYTE_FALLBACK_START:
-                raise ValueError(f"special token {token} must not occupy ID {tid}")
-        # Layout is therefore: 0-15 specials, 16-271 byte alphabet, 272+ learned merges
 
     def encode(self, text: str, *, add_bos: bool = False, add_eos: bool = False) -> list[int]:
         if not isinstance(text, str):
@@ -171,34 +233,66 @@ class ProductionBPETokenizer:
             raise ValueError(f"tokenizer/model vocabulary mismatch: {self.vocab_size} != {model_vocab}")
 
 
+def train_byte_level_bpe(
+    files: Sequence[str | Path],
+    output_path: str | Path,
+    *,
+    vocab_size: int,
+    min_frequency: int = 2,
+    show_progress: bool = False,
+) -> ProductionBPETokenizer:
+    """Train byte-level BPE and require the locked special and byte-fallback IDs.
+
+    ``vocab_size`` includes the 16 special tokens. Production training must pass
+    32,768. Smaller sizes exist so tests can prove the ID layout without a
+    corpus large enough to fill every learned merge.
+    """
+    if not isinstance(vocab_size, int) or isinstance(vocab_size, bool):
+        raise TypeError("vocab_size must be an integer")
+    if vocab_size < BPE_START or vocab_size > PRODUCTION_VOCAB_SIZE:
+        raise ValueError(f"vocab_size must be between {BPE_START} and {PRODUCTION_VOCAB_SIZE}")
+    if min_frequency < 1:
+        raise ValueError("min_frequency must be positive")
+    if not files:
+        raise ValueError("at least one corpus file is required")
+    Tokenizer, ByteLevelDecoder, BPE, ByteLevel, BpeTrainer = _require_tokenizers()
+    alphabet = byte_fallback_alphabet()
+    tokenizer = Tokenizer(BPE(unk_token="<|unk|>"))
+    tokenizer.pre_tokenizer = ByteLevel(add_prefix_space=False)
+    tokenizer.decoder = ByteLevelDecoder()
+    trainer = BpeTrainer(
+        vocab_size=vocab_size,
+        min_frequency=min_frequency,
+        special_tokens=list(SPECIAL_TOKENS),
+        initial_alphabet=alphabet,
+        show_progress=show_progress,
+    )
+    tokenizer.train_from_iterator(iter_corpus_texts(files), trainer=trainer)
+    trained = ProductionBPETokenizer(tokenizer, expected_vocab_size=vocab_size)
+    trained.save(output_path)
+    if vocab_size == PRODUCTION_VOCAB_SIZE:
+        return ProductionBPETokenizer.load(output_path)
+    return trained
+
+
 def train_production_bpe(
     files: Sequence[str | Path],
     output_path: str | Path,
     *,
     vocab_size: int = PRODUCTION_VOCAB_SIZE,
     min_frequency: int = 2,
+    show_progress: bool = False,
 ) -> ProductionBPETokenizer:
-    """Train a byte-level BPE artifact; corpus approval is enforced by the CLI."""
+    """Train the production artifact. Corpus approval is enforced by the CLI."""
     if vocab_size != PRODUCTION_VOCAB_SIZE:
         raise ValueError("production BPE vocabulary is fixed at 32768")
-    if not files:
-        raise ValueError("at least one approved corpus file is required")
-    Tokenizer, ByteLevelDecoder, BPE, ByteLevel, BpeTrainer = _require_tokenizers()
-    tokenizer = Tokenizer(BPE(unk_token="<|unk|>"))
-    tokenizer.pre_tokenizer = ByteLevel(add_prefix_space=False)
-    tokenizer.decoder = ByteLevelDecoder()
-    # special_tokens first → IDs 0-15; ByteLevel alphabet is then placed at 16-271;
-    # remaining slots become the learned merges (272+).
-    trainer = BpeTrainer(
-        vocab_size=PRODUCTION_VOCAB_SIZE,
+    return train_byte_level_bpe(
+        files,
+        output_path,
+        vocab_size=vocab_size,
         min_frequency=min_frequency,
-        special_tokens=list(SPECIAL_TOKENS),
-        show_progress=False,
+        show_progress=show_progress,
     )
-    tokenizer.train([str(Path(path)) for path in files], trainer)
-    result = ProductionBPETokenizer(tokenizer)
-    result.save(output_path)
-    return ProductionBPETokenizer.load(output_path)
 
 
 def write_manifest(
@@ -207,6 +301,7 @@ def write_manifest(
     *,
     corpus_manifest_sha256: str,
     implementation_commit: str,
+    min_frequency: int = 2,
 ) -> ProductionTokenizerManifest:
     try:
         import tokenizers
@@ -222,6 +317,7 @@ def write_manifest(
         tokenizers_version=tokenizers.__version__,
         vocab_size=artifact.vocab_size,
         special_tokens=SPECIAL_TOKENS,
+        min_frequency=min_frequency,
     )
     destination = Path(manifest_path)
     destination.parent.mkdir(parents=True, exist_ok=True)

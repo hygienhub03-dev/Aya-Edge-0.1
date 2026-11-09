@@ -23,6 +23,13 @@
     "contamination review against held-out evaluation"
   ],
   "approved_sources": [],
+  "selected_first_language_source": {
+    "dataset": "HuggingFaceFW/fineweb-edu",
+    "config": "sample-10BT",
+    "license": "ODC-By-1.0",
+    "status": "selected_pending_local_slice",
+    "note": "The parent dataset card declares ODC-By 1.0 and Common Crawl terms also apply. A bounded slice becomes an approved training source only when scripts/prepare_language_corpus.py writes license_audit.json and tokenizer_approval.json for the collected documents."
+  },
   "candidate_sources_require_review": [
     "OpenAssistant or other conversational corpora: verify exact revision and license",
     "ToolBench/API-Bank derivatives: audit upstream APIs and redistribution terms",
