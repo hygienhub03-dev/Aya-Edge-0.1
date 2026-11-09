@@ -17,6 +17,13 @@ DATASET = "openbmb/UltraData-SFT-Agent-2609"
 REVISION = "f684cc1"  # Dataset-card revision inspected for this pilot; resolve full Hub SHA at runtime.
 
 
+def json_default(value: object) -> str:
+    """Serialize Hub date-like metadata without losing its ISO representation."""
+    if hasattr(value, "isoformat"):
+        return value.isoformat()
+    raise TypeError(f"object of type {type(value).__name__} is not JSON serializable")
+
+
 def has_cjk(text: str) -> bool:
     return bool(re.search(r"[\u3400-\u9fff]", text))
 
@@ -139,7 +146,7 @@ def main() -> None:
                     "use_scope": "bounded_personal_research_sft_pilot",
                     "split": split_for_id(row["uuid"]),
                 }
-                handles[record["split"]].write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
+                handles[record["split"]].write(json.dumps(record, ensure_ascii=False, sort_keys=True, default=json_default) + "\n")
                 seen_uuids.add(identifier)
                 counts[record["split"]] += 1
                 accepted_by_subset[subset] += 1

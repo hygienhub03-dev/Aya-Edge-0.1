@@ -1,4 +1,6 @@
-from scripts.prepare_ultradata_agent import split_for_id, valid_trajectory
+from datetime import datetime, timezone
+
+from scripts.prepare_ultradata_agent import json_default, split_for_id, valid_trajectory
 
 
 def test_split_is_deterministic_and_valid():
@@ -23,3 +25,8 @@ def test_valid_trajectory_rejects_chinese_and_long_rows():
     assert valid_trajectory(base, 1000) == (False, "non_english_or_mixed_language")
     long_row = {"uuid": "sample-3", "messages": [{"role": "user", "content": "x" * 200}, {"role": "assistant", "content": "ok"}], "tools": []}
     assert valid_trajectory(long_row, 100) == (False, "trajectory_too_long")
+
+
+def test_json_default_serializes_hub_dates_as_iso8601():
+    value = datetime(2026, 11, 9, 23, 21, tzinfo=timezone.utc)
+    assert json_default(value) == "2026-11-09T23:21:00+00:00"
