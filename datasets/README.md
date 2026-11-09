@@ -25,7 +25,9 @@ Stage 1 begins with an experimental 50/50 mixture of general language/knowledge 
 
 ```bash
 python -m pip install -e ".[data]"
-python scripts/prepare_language_corpus.py --char-budget 25000000
+python scripts/prepare_language_corpus.py --char-budget 25000000 \
+  --accept-commoncrawl-terms \
+  --accept-residual-page-rights-risk
 python scripts/train_bpe_tokenizer.py \
   --input datasets/language_v1/train.jsonl \
   --input datasets/language_v1/validation.jsonl \
@@ -41,3 +43,21 @@ python scripts/train_language_model.py \
 ```
 
 The 1,000-step configuration is the first saved language run of the 310,115,904-parameter model. It is not a finished pretraining run. Resume the checkpoint to continue toward the 100,000-step plan.
+
+
+## Bounded agent-SFT pilot
+
+UltraData-SFT-Agent-2609 is the selected agent-supervision candidate, separate from language pretraining. The first pilot is capped at 25,000 trajectories: 12,000 Tool-Use, 5,000 English Search-Agent, and 8,000 General-Agent. The preparation script streams rows and writes structured JSONL splits without materializing the full Hub dataset.
+
+Review `docs/data/ULTRADATA_AGENT_SFT.md` before running:
+
+```bash
+python scripts/prepare_ultradata_agent.py \
+  --tool-use 12000 \
+  --search-agent 5000 \
+  --general-agent 8000 \
+  --accept-upstream-terms \
+  --accept-residual-upstream-rights-risk
+```
+
+The dataset card declares Apache-2.0 for the project but also requires compliance with upstream licenses. This pilot is local/personal-research scope only; it is not blanket clearance for commercial deployment or redistribution. The script preserves tool definitions and message boundaries but does not make the frozen virtual tools executable.
