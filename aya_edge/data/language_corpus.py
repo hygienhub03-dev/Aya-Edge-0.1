@@ -105,14 +105,22 @@ def approval_record(
     corpus_manifest_path: str,
     document_count: int,
     character_count: int,
+    acknowledgements: list[str],
 ) -> dict[str, object]:
+    if not {"commoncrawl_terms", "residual_page_rights_risk"}.issubset(set(acknowledgements)):
+        raise ValueError("conditional FineWeb-Edu approval requires both explicit risk acknowledgements")
     return {
         "approved": True,
+        "approval_status": "approved_with_conditions",
+        "approval_basis": "bounded_local_personal_research_slice",
+        "conditions_acknowledged": sorted(set(acknowledgements)),
         "scope": "first_language_slice_only",
-        "label": "PRODUCTION-SLICE",
+        "label": "CONDITIONAL-RESEARCH-SLICE",
         "dataset": FINEWEB_EDU_DATASET,
         "config": FINEWEB_EDU_CONFIG,
         "source_registry_revision": revision,
+        "dataset_revision": revision,
+        "source_registry_entry": "fineweb_edu",
         "license_audit_sha256": license_audit_sha256,
         "corpus_manifest": corpus_manifest_path,
         "license": "ODC-By-1.0",
