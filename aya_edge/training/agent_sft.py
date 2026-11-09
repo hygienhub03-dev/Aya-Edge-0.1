@@ -145,7 +145,10 @@ def validate_trajectory(row: Mapping[str, Any]) -> list[dict[str, Any]]:
                 raise SFTDataError(f"message {index} is a tool result without a pending call")
             call_id = str(raw.get("tool_call_id", ""))
             name = str(raw.get("name", ""))
-            match = next((call for call in pending if (call_id and call["id"] == call_id) or (name and call["function"]["name"] == name)), None)
+            if call_id:
+                match = next((call for call in pending if call["id"] == call_id), None)
+            else:
+                match = next((call for call in pending if name and call["function"]["name"] == name), None)
             if match is None:
                 raise SFTDataError(f"message {index} does not match a pending tool call")
             pending.remove(match)

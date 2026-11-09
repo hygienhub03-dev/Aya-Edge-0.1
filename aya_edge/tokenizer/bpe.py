@@ -54,9 +54,14 @@ def _require_tokenizers():
 
 
 def byte_fallback_alphabet() -> list[str]:
-    """Return the 256-character ByteLevel alphabet in trainer insertion order."""
+    """Return the canonical 256-character ByteLevel alphabet.
+
+    Recent Tokenizers releases return ``ByteLevel.alphabet()`` from an
+    unordered set, so its raw order can vary between calls. Sorting it here
+    makes the reserved byte IDs reproducible across training and validation.
+    """
     _, _, _, ByteLevel, _ = _require_tokenizers()
-    alphabet = list(ByteLevel.alphabet())
+    alphabet = sorted(ByteLevel.alphabet())
     if len(alphabet) != 256 or len(set(alphabet)) != 256:
         raise RuntimeError("ByteLevel.alphabet() must contain 256 distinct characters")
     return alphabet

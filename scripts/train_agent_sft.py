@@ -27,6 +27,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-steps", type=int)
     parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--max-length", type=int)
+    parser.add_argument("--validation-interval", type=int)
     parser.add_argument("--allow-dirty", action="store_true")
     return parser
 
@@ -36,6 +37,27 @@ def _git_state(root: Path) -> dict[str, object]:
     commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, text=True, capture_output=True, check=False)
     dirty = subprocess.run(["git", "status", "--porcelain"], cwd=root, text=True, capture_output=True, check=False)
     return {"commit": commit.stdout.strip() or None, "dirty": bool(dirty.stdout.strip())}
+
+
+def evaluate(model, examples, *, batch_size: int, device: torch.device) -> tuple[float, int]:
+    """Return token-weighted masked validation loss and supervised-token count."""
+    model.eval()
+    total_loss = 0.0
+    total_tokens = 0
+    with torch.no_grad():
+        for batch_examples in iter_batches(examples, batch_size):
+            input_ids, labels = collate(batch_examples, pad_token_id=SPECIAL_TOKEN_IDS["<|pad|>"])
+            input_ids, labels = input_ids.to(device), labels.to(device)
+            result = model(input_ids, labels=labels)
+            if not torch.isfinite(result["loss"]):
+                raise FloatingPointError("non-finite agent SFT validation loss")
+            supervised = int((labels != -100).sum())
+            total_loss += float(result["loss"]) * supervised
+            total_tokens += supervised
+    model.train()
+    if total_tokens == 0:
+        raise ValueError("validation contains no supervised assistant tokens")
+    return total_loss / total_tokens, total_tokens
 
 
 def train(args: argparse.Namespace) -> None:
@@ -65,6 +87,9 @@ def train(args: argparse.Namespace) -> None:
         metadata = load_checkpoint(args.resume, model, optimizer, scheduler=scheduler, scaler=scaler, map_location=device)
         step = int(metadata.get("step", 0))
     accumulation = int(train_cfg.get("gradient_accumulation_steps", 1))
+    validation_interval = args.validation_interval or int(train_cfg.get("validation_interval_steps", 100))
+    if validation_interval < 1:
+        raise ValueError("validation interval must be positive")
     metrics_path = args.metrics or args.output.with_suffix(".metrics.jsonl")
     metrics_path.parent.mkdir(parents=True, exist_ok=True)
     started = time.time()
@@ -95,6 +120,12 @@ def train(args: argparse.Namespace) -> None:
         scheduler.step()
         step += 1
         record = {"step": step, "loss": total_loss, "supervised_tokens": supervised, "grad_norm": float(grad_norm), "learning_rate": scheduler.get_last_lr()[0], "elapsed_seconds": time.time() - started}
+        if step == 1 or step % validation_interval == 0 or step == max_steps:
+            validation_loss, validation_tokens = evaluate(
+                model, validation_examples, batch_size=args.batch_size, device=device
+            )
+            record["validation_loss"] = validation_loss
+            record["validation_supervised_tokens"] = validation_tokens
         if step == 1 or step % 10 == 0 or step == max_steps:
             print(json.dumps(record))
             with metrics_path.open("a", encoding="utf-8") as handle:

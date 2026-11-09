@@ -47,9 +47,7 @@ def test_training_requires_optional_dependency_or_enough_corpus(tmp_path):
 
 def test_jsonl_training_uses_text_field_and_locks_byte_ids(tmp_path):
     pytest.importorskip("tokenizers")
-    from tokenizers.pre_tokenizers import ByteLevel
-
-    from aya_edge.tokenizer.bpe import train_byte_level_bpe
+    from aya_edge.tokenizer.bpe import byte_fallback_alphabet, train_byte_level_bpe
 
     corpus = tmp_path / "corpus.jsonl"
     corpus.write_text(
@@ -61,7 +59,7 @@ def test_jsonl_training_uses_text_field_and_locks_byte_ids(tmp_path):
     assert tokenizer.encode("category")
     roundtrip = tokenizer.decode(tokenizer.encode("café 你好"))
     assert roundtrip == "café 你好"
-    alphabet = list(ByteLevel.alphabet())
+    alphabet = byte_fallback_alphabet()
     vocab = tokenizer._backend.get_vocab()
     assert [vocab[token] for token in alphabet] == list(range(16, 272))
     assert "category" not in vocab or vocab["category"] >= 272
