@@ -44,3 +44,19 @@ This is a source-documentation and engineering gate, not legal advice. Where com
 [16]: https://gorilla.cs.berkeley.edu/leaderboard.html "BFCL V4 leaderboard"
 [17]: https://github.com/ShishirPatil/gorilla/tree/f7cf7359b7ac615a0b294831c5ba2bc95ee4a000/berkeley-function-call-leaderboard "Pinned BFCL V4 evaluator"
 [18]: https://github.com/ShishirPatil/gorilla/blob/f7cf7359b7ac615a0b294831c5ba2bc95ee4a000/LICENSE "Pinned Gorilla repository license"
+
+
+## 2026-11-09 addendum: bounded personal-research pilots
+
+The following source entries are now recorded in `configs/data/source_registry.yaml` as `approved_with_conditions`. This is an engineering enablement decision for bounded local personal research, not a legal opinion, not a blanket source clearance, and not permission to redistribute source payloads or publish a commercial model.
+
+| Source | Enabled scope | Required conditions |
+|---|---|---|
+| FineWeb-Edu `sample-10BT` | Bounded local language-learning slice | Operator must acknowledge Common Crawl terms and residual page-level rights risk; preserve ODC-By attribution and the resolved dataset revision. |
+| UltraData-SFT-Agent-2609 | Bounded local agent-SFT pilot (Tool-Use, English Search-Agent, General-Agent) | Operator must acknowledge upstream terms and residual item-level rights risk; do not mirror/re-host raw artifacts; preserve provenance and attribution. |
+
+The FineWeb-Edu preparation command now checks the dedicated `fineweb_edu` registry entry and requires explicit command-line acknowledgements before collecting data or writing its conditional approval record. The UltraData preparation command similarly requires explicit acknowledgements and writes the unresolved-upstream-rights status into every output record and the manifest.
+
+For UltraData, the dataset card declares Apache-2.0 for the project but explicitly says upstream terms continue to apply and that public course pages are not automatically cleared for training or redistribution. No per-record upstream-rights manifest is provided. The output therefore remains marked `upstream_rights_review: not_resolved_per_record`; do not describe this pilot as legally cleared for commercial use or redistribution.
+
+Both pilots must remain local and bounded unless the relevant upstream rights are reviewed for the intended use. The commands intentionally require acknowledgement flags; these flags document operator awareness and do not cure third-party rights.
