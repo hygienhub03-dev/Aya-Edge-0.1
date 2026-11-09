@@ -101,6 +101,8 @@ def main() -> None:
     counts = Counter()
     rejects = Counter()
     accepted_by_subset = Counter()
+    seen_uuids: set[str] = set()
+    complete = False
     try:
         for subset, quota in quotas.items():
             if quota == 0:
@@ -115,6 +117,10 @@ def main() -> None:
                 if not valid:
                     rejects[f"{subset}:{reason}"] += 1
                     continue
+                identifier = row["uuid"]
+                if identifier in seen_uuids:
+                    rejects[f"{subset}:duplicate_uuid"] += 1
+                    continue
                 domain = str(row.get("domain", ""))
                 if subset == "Search-Agent" and domain and domain != "Search_Agent-en":
                     rejects[f"{subset}:non_english_domain"] += 1
@@ -126,7 +132,8 @@ def main() -> None:
                     "source": DATASET,
                     "domain": domain or subset.replace("-", "_"),
                     "subset": subset,
-                    "license": "Apache-2.0",
+                    "license": "Apache-2.0 dataset declaration; applicable upstream terms unresolved",
+                    "declared_dataset_license": "Apache-2.0",
                     "source_revision": resolved_revision,
                     "upstream_rights_review": "not_resolved_per_record",
                     "use_scope": "bounded_personal_research_sft_pilot",
@@ -140,9 +147,20 @@ def main() -> None:
                     f"{subset}: requested {quota}, accepted {accepted_by_subset[subset]} "
                     f"after scanning {scanned}; refusing to silently underfill the pilot"
                 )
+        complete = True
     finally:
         for handle in handles.values():
             handle.close()
+        if not complete:
+            for split_path in output.glob("*.jsonl"):
+                split_path.unlink(missing_ok=True)
+
+    def file_sha256(path: Path) -> str:
+        digest = hashlib.sha256()
+        with path.open("rb") as source_file:
+            for block in iter(lambda: source_file.read(1024 * 1024), b""):
+                digest.update(block)
+        return digest.hexdigest()
 
     manifest = {
         "format": "aya-edge-agent-sft-manifest",
@@ -150,7 +168,8 @@ def main() -> None:
         "dataset": DATASET,
         "dataset_card_revision": args.revision,
         "resolved_hub_revision": resolved_revision,
-        "license": "Apache-2.0 (dataset-level declaration)",
+        "license": "Apache-2.0 dataset declaration; applicable upstream terms unresolved",
+        "declared_dataset_license": "Apache-2.0",
         "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
         "dataset_card_url": f"https://huggingface.co/datasets/{DATASET}",
         "attribution": "MiniCPM Team, UltraData-SFT-Agent-2609 (2026)",
@@ -165,6 +184,8 @@ def main() -> None:
         "requested_by_subset": quotas,
         "accepted_by_subset": dict(accepted_by_subset),
         "splits": dict(counts),
+        "split_sha256": {name: file_sha256(output / f"{name}.jsonl") for name in ("train", "validation", "test")},
+        "unique_uuids": len(seen_uuids),
         "rejections": dict(rejects),
         "split_policy": "stable UUID SHA-256 bucket: 90% train, 5% validation, 5% test",
         "max_characters_per_trajectory": args.max_characters,
