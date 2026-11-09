@@ -1,0 +1,50 @@
+{
+  "accepted_by_subset": {
+    "General-Agent": 8000,
+    "Search-Agent": 1900,
+    "Tool-Use": 12000
+  },
+  "attribution": "MiniCPM Team, UltraData-SFT-Agent-2609 (2026)",
+  "dataset": "openbmb/UltraData-SFT-Agent-2609",
+  "dataset_card_revision": "f684cc1",
+  "dataset_card_url": "https://huggingface.co/datasets/openbmb/UltraData-SFT-Agent-2609",
+  "declared_dataset_license": "Apache-2.0",
+  "format": "aya-edge-agent-sft-manifest",
+  "license": "Apache-2.0 dataset declaration; applicable upstream terms unresolved",
+  "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+  "limitations": [
+    "Apache-2.0 dataset declaration does not override upstream dataset/content terms.",
+    "The dataset card identifies course-page and web/repository-derived samples; public access alone is not a training license.",
+    "This bounded personal research pilot is not legal clearance for commercial use or redistribution.",
+    "Frozen tools are demonstrations only; no tool implementations or environments are included.",
+    "Diagnostic failure traces are not success labels; review trajectories before assigning supervision masks."
+  ],
+  "max_characters_per_trajectory": 80000,
+  "rejections": {
+    "General-Agent:non_english_or_mixed_language": 1471,
+    "General-Agent:trajectory_too_long": 4118,
+    "Search-Agent:non_english_or_mixed_language": 745,
+    "Search-Agent:trajectory_too_long": 2325,
+    "Tool-Use:trajectory_too_long": 189
+  },
+  "requested_by_subset": {
+    "General-Agent": 8000,
+    "Search-Agent": 1900,
+    "Tool-Use": 12000
+  },
+  "resolved_hub_revision": "f684cc1a9f3e19f6f4929102cd9b06cc0b895b8a",
+  "split_policy": "stable UUID SHA-256 bucket: 90% train, 5% validation, 5% test",
+  "split_sha256": {
+    "test": "bef0d58559f6682476239f137cf94e22fb9f33778ede9b295f405b0fb55feef3",
+    "train": "cdf1d67d0e62b69a19089bda49f602709fd4800a060fe3a7ed153850995dc3eb",
+    "validation": "e960d403ebf6fb9948dffb0fad60abf7d8df5b1907b26cfeea19017cfa014f56"
+  },
+  "splits": {
+    "test": 1052,
+    "train": 19761,
+    "validation": 1087
+  },
+  "unique_uuids": 21900,
+  "upstream_rights_review": "not_resolved_per_record",
+  "version": 1
+}

@@ -19,6 +19,7 @@ def main() -> int:
     parser.add_argument("--train-jsonl", type=Path, required=True)
     parser.add_argument("--validation-jsonl", type=Path, required=True)
     parser.add_argument("--max-length", type=int)
+    parser.add_argument("--include-tool-schemas", action="store_true")
     parser.add_argument("--manifest", type=Path, help="optional dataset manifest to record in the report")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
@@ -27,8 +28,18 @@ def main() -> int:
     tokenizer = ProductionBPETokenizer.load(args.tokenizer)
     tokenizer.assert_model_alignment(cfg)
     max_length = min(cfg.max_seq_len, args.max_length or int(raw["training"].get("sequence_length", cfg.max_seq_len)))
-    train = read_encoded_jsonl(args.train_jsonl, tokenizer, max_length=max_length)
-    validation = read_encoded_jsonl(args.validation_jsonl, tokenizer, max_length=max_length)
+    train = read_encoded_jsonl(
+        args.train_jsonl,
+        tokenizer,
+        max_length=max_length,
+        include_tool_schemas=args.include_tool_schemas,
+    )
+    validation = read_encoded_jsonl(
+        args.validation_jsonl,
+        tokenizer,
+        max_length=max_length,
+        include_tool_schemas=args.include_tool_schemas,
+    )
     report = {
         "status": "ready",
         "model_vocab_size": cfg.vocab_size,
@@ -40,6 +51,7 @@ def main() -> int:
         "train_supervised_tokens": sum(example.supervised_tokens for example in train),
         "validation_supervised_tokens": sum(example.supervised_tokens for example in validation),
         "objective": "assistant_only_loss",
+        "include_tool_schemas": args.include_tool_schemas,
         "tool_validation": "json-schema arguments plus call/result pairing",
         "dataset_manifest": str(args.manifest) if args.manifest else None,
     }

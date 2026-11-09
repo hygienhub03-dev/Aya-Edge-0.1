@@ -1,0 +1,27 @@
+{
+  "approval_basis": "bounded_local_personal_research_slice",
+  "approval_status": "approved_with_conditions",
+  "approved": true,
+  "characters": 24999999,
+  "conditions_acknowledged": [
+    "commoncrawl_terms",
+    "residual_page_rights_risk"
+  ],
+  "config": "sample-10BT",
+  "corpus_manifest": "datasets/language_v1/manifest.json",
+  "dataset": "HuggingFaceFW/fineweb-edu",
+  "dataset_revision": "87f09149ef4734204d70ed1d046ddc9ca3f2b8f9",
+  "documents": 5258,
+  "label": "CONDITIONAL-RESEARCH-SLICE",
+  "license": "ODC-By-1.0",
+  "license_audit_sha256": "3446ba155866675962c4c9c7159b09873c36df467afa6c8992f5f011172eedf0",
+  "mixture": {
+    "general_language_and_knowledge": 1.0,
+    "instruction_and_agent_patterns": 0.0,
+    "reason": "Milestone A teaches ordinary language from educational web text. The 50/50 instruction allocation starts with agent supervision, not with synthetic tool results mixed into this slice."
+  },
+  "publisher": "Hugging Face (Lozhkov, Ben Allal, von Werra, Wolf)",
+  "scope": "first_language_slice_only",
+  "source_registry_entry": "fineweb_edu",
+  "source_registry_revision": "87f09149ef4734204d70ed1d046ddc9ca3f2b8f9"
+}

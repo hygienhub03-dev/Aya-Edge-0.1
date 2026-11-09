@@ -1,0 +1,28 @@
+{
+  "attribution": "Lozhkov, Anton; Ben Allal, Loubna; von Werra, Leandro; Wolf, Thomas. FineWeb-Edu. Hugging Face, 2024. https://huggingface.co/datasets/HuggingFaceFW/fineweb-edu. Licensed under ODC-By 1.0.",
+  "audited_at": "2026-11-09T22:27:53+00:00",
+  "card_license": [
+    "odc-by"
+  ],
+  "char_budget": 25000000,
+  "config": "sample-10BT",
+  "dataset": "HuggingFaceFW/fineweb-edu",
+  "dataset_url": "https://huggingface.co/datasets/HuggingFaceFW/fineweb-edu",
+  "declared_license": "ODC-By-1.0",
+  "license_url": "https://opendatacommons.org/licenses/by/1-0/",
+  "not_approved": [
+    "The full FineWeb-Edu corpus is not approved by collecting this slice.",
+    "Individual source-page copyrights are not cleared document by document.",
+    "Upstream email and IP rewriting is recorded; this slice adds no further privacy guarantee."
+  ],
+  "obligations": [
+    "Public distribution of this database or a derivative database requires ODC-By attribution.",
+    "Use of the underlying crawl is also subject to the Common Crawl terms of use."
+  ],
+  "permitted_use_recorded": [
+    "local research training of the AYA Edge language model",
+    "creation of a derivative database slice with attribution"
+  ],
+  "publisher": "Hugging Face (Lozhkov, Ben Allal, von Werra, Wolf)",
+  "revision": "87f09149ef4734204d70ed1d046ddc9ca3f2b8f9"
+}

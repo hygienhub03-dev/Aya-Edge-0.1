@@ -147,8 +147,13 @@ def validate_trajectory(row: Mapping[str, Any]) -> list[dict[str, Any]]:
             name = str(raw.get("name", ""))
             if call_id:
                 match = next((call for call in pending if call["id"] == call_id), None)
-            else:
+            elif name:
                 match = next((call for call in pending if name and call["function"]["name"] == name), None)
+            else:
+                # UltraData contains older trajectories whose tool results
+                # carry neither an ID nor a name. In that format the only
+                # unambiguous contract is FIFO pairing.
+                match = pending[0]
             if match is None:
                 raise SFTDataError(f"message {index} does not match a pending tool call")
             pending.remove(match)
@@ -176,11 +181,23 @@ def _message_parts(message: Mapping[str, Any]) -> tuple[str, str, str]:
     return prefix, body, "<|im_end|>"
 
 
-def encode_trajectory(row: Mapping[str, Any], tokenizer: Any, *, max_length: int) -> EncodedExample:
+def encode_trajectory(
+    row: Mapping[str, Any],
+    tokenizer: Any,
+    *,
+    max_length: int,
+    include_tool_schemas: bool = True,
+) -> EncodedExample:
     """Serialize and encode a validated trajectory with assistant-only labels."""
     messages = validate_trajectory(row)
     ids: list[int] = [SPECIAL_TOKEN_IDS["<|bos|>"]]
     labels: list[int] = [-100]
+    declared_tools = row.get("tools") or []
+    if include_tool_schemas and declared_tools:
+        tool_header = "<|meta_sep|><|json|>" + _json(declared_tools) + "<|im_end|>"
+        tool_ids = tokenizer.encode(tool_header)
+        ids.extend(tool_ids)
+        labels.extend([-100] * len(tool_ids))
     for message in messages:
         prefix, body, suffix = _message_parts(message)
         prefix_ids = tokenizer.encode(prefix)
@@ -198,7 +215,13 @@ def encode_trajectory(row: Mapping[str, Any], tokenizer: Any, *, max_length: int
     return EncodedExample(tuple(ids), tuple(labels), row.get("uuid"), row.get("subset"))
 
 
-def read_encoded_jsonl(path: str | Path, tokenizer: Any, *, max_length: int) -> list[EncodedExample]:
+def read_encoded_jsonl(
+    path: str | Path,
+    tokenizer: Any,
+    *,
+    max_length: int,
+    include_tool_schemas: bool = True,
+) -> list[EncodedExample]:
     examples: list[EncodedExample] = []
     source = Path(path)
     for line_number, line in enumerate(source.read_text(encoding="utf-8").splitlines(), 1):
@@ -209,7 +232,14 @@ def read_encoded_jsonl(path: str | Path, tokenizer: Any, *, max_length: int) -> 
         except json.JSONDecodeError as exc:
             raise SFTDataError(f"invalid JSON at {source}:{line_number}") from exc
         try:
-            examples.append(encode_trajectory(row, tokenizer, max_length=max_length))
+            examples.append(
+                encode_trajectory(
+                    row,
+                    tokenizer,
+                    max_length=max_length,
+                    include_tool_schemas=include_tool_schemas,
+                )
+            )
         except SFTDataError as exc:
             raise SFTDataError(f"{source}:{line_number}: {exc}") from exc
     if not examples:

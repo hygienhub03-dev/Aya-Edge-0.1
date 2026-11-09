@@ -9,7 +9,7 @@ model:
   top_k: 2
   use_shared_expert: true
   router_z_loss_weight: 0.0001
-  max_seq_len: 1024
+  max_seq_len: 2048
 
 # Approximate target budget: 310,115,904 trainable parameters with tied embeddings.
 # This is a total-parameter target; the structural active estimate includes top_k

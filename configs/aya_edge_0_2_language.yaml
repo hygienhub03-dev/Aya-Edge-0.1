@@ -13,7 +13,7 @@ model:
   top_k: 2
   use_shared_expert: true
   router_z_loss_weight: 0.0001
-  max_seq_len: 1024
+  max_seq_len: 2048
 
 architecture:
   target_total_parameters: 310000000
@@ -39,7 +39,7 @@ training:
   planned_pretrain_steps: 100000
   max_grad_norm: 1.0
   aux_loss_weight: 0.01
-  sequence_length: 128
+  sequence_length: 2048
   validation_batches: 8
   precision: auto
   checkpoint_interval_steps: 100

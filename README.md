@@ -31,6 +31,27 @@ pytest
 
 The 0.1 configuration is intentionally small for inspection. The 0.2 configuration targets 310,115,904 total trainable parameters with tied embeddings; validate memory and compute on the target GPU before any training.
 
+### First agent-SFT experiment
+
+The first validated agent-SFT run uses `configs/aya_edge_0_2_language.yaml` with a 2,048-token context. The tokenizer-compatible dataset is materialized without truncation; tool calls and JSON-schema arguments are validated, while repeated tool declarations are omitted from the prompt to preserve context for the first bounded run.
+
+```bash
+python scripts/prepare_agent_sft_dataset.py \
+  --input-dir datasets/ultradata_agent_v1 \
+  --output-dir datasets/ultradata_agent_sft_v1 \
+  --tokenizer artifacts/tokenizer/aya_edge_bpe_32768.json \
+  --max-length 2048
+python scripts/kaggle_preflight.py \
+  --config configs/aya_edge_0_2_language.yaml \
+  --tokenizer artifacts/tokenizer/aya_edge_bpe_32768.json \
+  --train-jsonl datasets/ultradata_agent_sft_v1/train.jsonl \
+  --validation-jsonl datasets/ultradata_agent_sft_v1/validation.jsonl \
+  --manifest datasets/ultradata_agent_sft_v1/manifest.json \
+  --output artifacts/agent_sft_preflight.json
+```
+
+The generated corpus and source-derived JSONL files remain local research artifacts; their manifests record source revisions, checksums, attribution, and unresolved upstream-rights conditions. They are intentionally not committed to GitHub.
+
 ## Teacher
 
 Initial distillation teacher: `openbmb/MiniCPM5-1B`. The teacher is dense; this project does not assume it contains experts that can simply be pruned. Dense-to-MoE conversion and distillation require explicit experiments.
@@ -74,4 +95,5 @@ Initial distillation teacher: `openbmb/MiniCPM5-1B`. The teacher is dense; this 
 - The 0.2 training script is a resumable pipeline scaffold; the byte tokenizer and small fixtures are development adapters, not the approved production corpus/tokenizer.
 - The production BPE trainer is approval-gated. `scripts/prepare_language_corpus.py` can collect a bounded FineWeb-Edu slice after the live ODC-By check; no production tokenizer checksum is valid until that command and `scripts/train_bpe_tokenizer.py` have been run.
 - Agent SFT is available through `scripts/kaggle_preflight.py` and `scripts/train_agent_sft.py`; preflight validates JSON-schema tool arguments, call/result pairing, tokenizer/model alignment, and assistant-only target masks before training.
+- The first materialized SFT subset currently contains 489 train, 29 validation, and 24 test trajectories after rejecting malformed, unmatched, or over-context examples; the full source pilot remains available for later context-window and packing experiments.
 - Unit tests are provided but must be run in the target environment.

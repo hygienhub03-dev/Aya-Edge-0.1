@@ -28,6 +28,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--max-length", type=int)
     parser.add_argument("--validation-interval", type=int)
+    parser.add_argument("--include-tool-schemas", action="store_true")
     parser.add_argument("--allow-dirty", action="store_true")
     return parser
 
@@ -71,8 +72,18 @@ def train(args: argparse.Namespace) -> None:
     tokenizer = ProductionBPETokenizer.load(args.tokenizer)
     tokenizer.assert_model_alignment(cfg)
     max_length = min(cfg.max_seq_len, args.max_length or int(train_cfg.get("sequence_length", cfg.max_seq_len)))
-    train_examples = read_encoded_jsonl(args.input_jsonl, tokenizer, max_length=max_length)
-    validation_examples = read_encoded_jsonl(args.validation_jsonl, tokenizer, max_length=max_length)
+    train_examples = read_encoded_jsonl(
+        args.input_jsonl,
+        tokenizer,
+        max_length=max_length,
+        include_tool_schemas=args.include_tool_schemas,
+    )
+    validation_examples = read_encoded_jsonl(
+        args.validation_jsonl,
+        tokenizer,
+        max_length=max_length,
+        include_tool_schemas=args.include_tool_schemas,
+    )
     set_seed(int(train_cfg["seed"]), deterministic=bool(train_cfg.get("deterministic", True)))
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = AyaEdgeForCausalLM(cfg).to(device)
