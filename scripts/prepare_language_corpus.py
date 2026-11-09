@@ -30,7 +30,27 @@ def main() -> None:
     parser.add_argument("--char-budget", type=int, default=25_000_000)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--config", default=FINEWEB_EDU_CONFIG)
+    parser.add_argument("--source-registry", type=Path, default=Path("configs/data/source_registry.yaml"))
+    parser.add_argument("--accept-commoncrawl-terms", action="store_true")
+    parser.add_argument("--accept-residual-page-rights-risk", action="store_true")
     args = parser.parse_args()
+
+    if not args.accept_commoncrawl_terms or not args.accept_residual_page_rights_risk:
+        raise SystemExit(
+            "FineWeb-Edu is conditionally enabled for a bounded personal-research slice only. "
+            "Review docs/data/DATASET_LICENSING.md, then pass --accept-commoncrawl-terms "
+            "and --accept-residual-page-rights-risk."
+        )
+    try:
+        import yaml
+    except ImportError as exc:
+        raise SystemExit("install data extras (PyYAML) before preparing the language corpus") from exc
+    registry = yaml.safe_load(args.source_registry.read_text(encoding="utf-8"))
+    source = next((item for item in registry.get("sources", []) if item.get("source_id") == "fineweb_edu"), None)
+    if source is None or source.get("approval_status") != "approved_with_conditions":
+        raise SystemExit("refusing corpus: fineweb_edu must be approved_with_conditions in the source registry")
+    if source.get("repository") != FINEWEB_EDU_DATASET or source.get("configuration") != args.config:
+        raise SystemExit("refusing corpus: source registry dataset/config does not match this preparation request")
 
     identity = fetch_fineweb_edu_identity(config=args.config)
     output_dir = args.output_dir
@@ -89,6 +109,7 @@ def main() -> None:
         corpus_manifest_path=str(output_dir / "manifest.json"),
         document_count=documents,
         character_count=characters,
+        acknowledgements=["commoncrawl_terms", "residual_page_rights_risk"],
     )
     approval_sha = write_json(output_dir / "tokenizer_approval.json", approval)
     print(json.dumps({
