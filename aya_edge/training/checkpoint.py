@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import random
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 import torch
 
@@ -57,6 +57,7 @@ def save_checkpoint(
     tokens_processed: int = 0,
     config: AyaEdgeConfig | dict[str, Any] | None = None,
     dataset_version: str | None = None,
+    run: Mapping[str, Any] | None = None,
 ) -> None:
     """Save model, optimizer, RNG, and run metadata in one portable payload."""
     if step < 0 or tokens_processed < 0:
@@ -71,6 +72,7 @@ def save_checkpoint(
         "rng_state": _rng_state(),
         "config": config.to_dict() if isinstance(config, AyaEdgeConfig) else config,
         "dataset_version": dataset_version,
+        "run": dict(run) if run is not None else None,
     }
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)

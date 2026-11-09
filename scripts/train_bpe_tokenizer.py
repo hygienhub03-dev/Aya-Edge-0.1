@@ -40,11 +40,12 @@ for path in args.input:
 if args.min_frequency < 1:
     raise SystemExit("--min-frequency must be positive")
 
-train_production_bpe(args.input, args.output, min_frequency=args.min_frequency)
+train_production_bpe(args.input, args.output, min_frequency=args.min_frequency, show_progress=True)
 manifest = write_manifest(
     args.output,
     args.manifest_output,
     corpus_manifest_sha256=sha256_file(args.corpus_manifest),
     implementation_commit=args.implementation_commit,
+    min_frequency=args.min_frequency,
 )
 print(json.dumps(manifest.to_dict(), indent=2))

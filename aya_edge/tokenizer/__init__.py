@@ -12,6 +12,8 @@ from .bpe import (
     ProductionBPETokenizer,
     ProductionTokenizerManifest,
     sha256_file,
+    iter_corpus_texts,
+    train_byte_level_bpe,
     train_production_bpe,
     write_manifest,
 )
@@ -26,6 +28,8 @@ __all__ = [
     "ProductionBPETokenizer",
     "ProductionTokenizerManifest",
     "sha256_file",
+    "iter_corpus_texts",
+    "train_byte_level_bpe",
     "train_production_bpe",
     "write_manifest",
 ]

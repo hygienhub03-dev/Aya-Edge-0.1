@@ -55,6 +55,7 @@ def main() -> None:
         MANIFEST_PATH,
         corpus_manifest_sha256=sha256_file(CORPUS_MANIFEST),
         implementation_commit=impl,
+        min_frequency=1,
     )
 
     # Extra safety label in the manifest file itself

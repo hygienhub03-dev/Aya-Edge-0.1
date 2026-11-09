@@ -44,7 +44,7 @@ IDs 0–15 are reserved before BPE training and must never be learned or reorder
 
 IDs 16–271 are the fixed 256-byte fallback alphabet supplied by the Hugging Face `ByteLevel` pre-tokenizer. They guarantee that every possible UTF-8 byte sequence can be represented even if the learned merges do not cover it.
 
-IDs 272–32,767 are the learned BPE merge entries produced by training on the approved corpus. The implementation validates the full layout (specials + complete byte-fallback block) on load.
+The implementation passes `ByteLevel.alphabet()` as the BPE trainer's initial alphabet and trains from an iterator of document text. JSONL input contributes the `text` field only. Special tokens are reserved first, so the loaded artifact must contain IDs 0–15, then the 256 alphabet characters in `ByteLevel.alphabet()` order at IDs 16–271, then learned merges. A corpus that cannot fill all 32,768 IDs is rejected.
 
 ## Training gate
 

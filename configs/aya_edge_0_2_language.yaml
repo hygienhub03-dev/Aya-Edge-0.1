@@ -1,0 +1,47 @@
+# First language-learning run. The model block matches configs/aya_edge_0_2.yaml.
+# max_steps is the first saved milestone, not a claim that pretraining is finished.
+# Continue by resuming the checkpoint and raising max_steps toward planned_pretrain_steps.
+
+model:
+  vocab_size: 32768
+  d_model: 672
+  n_layers: 12
+  n_heads: 8
+  latent_dim: 192
+  ffn_dim: 1024
+  n_experts: 10
+  top_k: 2
+  use_shared_expert: true
+  router_z_loss_weight: 0.0001
+  max_seq_len: 1024
+
+architecture:
+  target_total_parameters: 310000000
+  tolerance_fraction: 0.02
+  dispatch: python_reference
+  attention: mla_inspired_latent_kv
+  status: first_language_training_configuration
+
+tokenizer:
+  artifact: artifacts/tokenizer/aya_edge_bpe_32768.json
+  manifest: artifacts/tokenizer/aya_edge_bpe_32768.manifest.json
+
+training:
+  seed: 42
+  deterministic: true
+  batch_size: 1
+  gradient_accumulation_steps: 8
+  gradient_checkpointing: true
+  learning_rate: 0.0002
+  weight_decay: 0.1
+  warmup_steps: 100
+  max_steps: 1000
+  planned_pretrain_steps: 100000
+  max_grad_norm: 1.0
+  aux_loss_weight: 0.01
+  sequence_length: 128
+  validation_batches: 8
+  precision: auto
+  checkpoint_interval_steps: 100
+  validation_interval_steps: 100
+  dataset_manifest: datasets/language_v1/manifest.json
